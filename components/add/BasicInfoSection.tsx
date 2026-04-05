@@ -1,36 +1,44 @@
+// components/add/BasicInfoSection.tsx
 import { useTheme } from "@/utils/theme";
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import MerchantField from "./MerchantField";
+import DateField from "./DateField";
+import TimeField from "./TimeField";
+import CurrencyField from "./CurrencyField";
+import TotalField from "./TotalField";
 
 interface Props {
   merchantName: string;
-  onMerchantPress: () => void;
+  merchantAddress: string;
+  onMerchantSelect: (merchant: {
+    id: string;
+    name: string;
+    address: string;
+    locationId?: string;
+  }) => void;
   date: string;
-  onDatePress: () => void;
+  onDateChange: (date: string) => void;
   time: string;
-  onTimePress: () => void;
+  onTimeChange: (time: string) => void;
   originalCurrency: string;
-  onCurrencyPress: () => void;
+  onCurrencyChange: (currency: string) => void;
   originalTotal: string;
+  preferredCurrency?: string;
 }
 
 export default function BasicInfoSection({
   merchantName,
-  onMerchantPress,
+  merchantAddress,
+  onMerchantSelect,
   date,
-  onDatePress,
+  onDateChange,
   time,
-  onTimePress,
+  onTimeChange,
   originalCurrency,
-  onCurrencyPress,
+  onCurrencyChange,
   originalTotal,
+  preferredCurrency = "USD",
 }: Props) {
   const { colors, styles: themeStyles } = useTheme();
 
@@ -45,102 +53,33 @@ export default function BasicInfoSection({
         Basic Information
       </Text>
 
-      <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
-        Merchant *
-      </Text>
-      <TouchableOpacity
-        style={[styles.selector, { backgroundColor: colors.surfaceLight }]}
-        onPress={onMerchantPress}
-      >
-        <Text style={[styles.selectorText, { color: colors.text }]}>
-          {merchantName || "Select Merchant"}
-        </Text>
-        <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
-      </TouchableOpacity>
+      <MerchantField
+        merchantName={merchantName}
+        merchantAddress={merchantAddress}
+        onMerchantSelect={onMerchantSelect}
+      />
 
       <View style={styles.row}>
         <View style={styles.halfColumn}>
-          <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
-            Date *
-          </Text>
-          <TouchableOpacity
-            style={[styles.selector, { backgroundColor: colors.surfaceLight }]}
-            onPress={onDatePress}
-          >
-            <Text style={[styles.selectorText, { color: colors.text }]}>
-              {date}
-            </Text>
-            <Ionicons
-              name="calendar-outline"
-              size={20}
-              color={colors.textSecondary}
-            />
-          </TouchableOpacity>
+          <DateField date={date} onDateChange={onDateChange} />
         </View>
-
         <View style={styles.halfColumn}>
-          <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
-            Time *
-          </Text>
-          <TouchableOpacity
-            style={[styles.selector, { backgroundColor: colors.surfaceLight }]}
-            onPress={onTimePress}
-          >
-            <Text style={[styles.selectorText, { color: colors.text }]}>
-              {time || "Select time"}
-            </Text>
-            <Ionicons
-              name="time-outline"
-              size={20}
-              color={colors.textSecondary}
-            />
-          </TouchableOpacity>
+          <TimeField time={time} onTimeChange={onTimeChange} />
         </View>
       </View>
 
-      <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
-        Currency
-      </Text>
-      <TouchableOpacity
-        style={[styles.selector, { backgroundColor: colors.surfaceLight }]}
-        onPress={onCurrencyPress}
-      >
-        <Text style={[styles.selectorText, { color: colors.text }]}>
-          {originalCurrency}
-        </Text>
-        <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
-      </TouchableOpacity>
-
-      <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
-        Total
-      </Text>
-      <View style={styles.totalContainer}>
-        <View
-          style={[styles.totalCurrency, { backgroundColor: colors.accent }]}
-        >
-          <Text style={[styles.totalCurrencyText, { color: colors.text }]}>
-            {originalCurrency}
-          </Text>
+      <View style={styles.row}>
+        <View style={styles.halfColumn}>
+          <CurrencyField
+            currency={originalCurrency}
+            onCurrencyChange={onCurrencyChange}
+            preferredCurrency={preferredCurrency}
+          />
         </View>
-        <TextInput
-          style={[
-            styles.input,
-            styles.totalInput,
-            {
-              backgroundColor: colors.surfaceLight,
-              color: colors.text,
-            },
-          ]}
-          placeholder="0.00"
-          placeholderTextColor={colors.textMuted}
-          keyboardType="decimal-pad"
-          value={originalTotal}
-          editable={false}
-        />
+        <View style={styles.halfColumn}>
+          <TotalField total={originalTotal} />
+        </View>
       </View>
-      <Text style={[styles.autoCalcText, { color: colors.textMuted }]}>
-        Auto-calculated from items
-      </Text>
     </View>
   );
 }
@@ -156,22 +95,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginBottom: 16,
   },
-  inputLabel: {
-    fontSize: 14,
-    marginBottom: 8,
-    marginTop: 12,
-  },
-  selector: {
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  selectorText: {
-    fontSize: 16,
-  },
   row: {
     flexDirection: "row",
     gap: 12,
@@ -179,33 +102,5 @@ const styles = StyleSheet.create({
   },
   halfColumn: {
     flex: 1,
-  },
-  totalContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  totalCurrency: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  totalCurrencyText: {
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  input: {
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-  },
-  totalInput: {
-    flex: 1,
-  },
-  autoCalcText: {
-    fontSize: 12,
-    marginTop: 8,
-    fontStyle: "italic",
   },
 });

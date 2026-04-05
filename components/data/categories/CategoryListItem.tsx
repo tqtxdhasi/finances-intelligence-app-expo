@@ -9,8 +9,6 @@ interface CategoryListItemProps {
   level: number;
   isExpanded: boolean;
   onToggle: (id: string) => void;
-  onEdit: (category: Category) => void;
-  onDelete: (category: Category) => void;
   hasSubcategories: boolean;
 }
 
@@ -19,8 +17,6 @@ export const CategoryListItem: React.FC<CategoryListItemProps> = ({
   level,
   isExpanded,
   onToggle,
-  onEdit,
-  onDelete,
   hasSubcategories,
 }) => {
   const { colors } = useTheme();
@@ -29,7 +25,7 @@ export const CategoryListItem: React.FC<CategoryListItemProps> = ({
     <TouchableOpacity
       style={[
         styles.categoryItem,
-        { paddingLeft: 16 + level * 20, borderBottomColor: colors.border },
+        { paddingLeft: 0 + level * 20, borderBottomColor: colors.border },
       ]}
       onPress={() => hasSubcategories && onToggle(category.id)}
     >
@@ -49,31 +45,13 @@ export const CategoryListItem: React.FC<CategoryListItemProps> = ({
           size={20}
           color={colors.accent}
         />
-        <Text style={[styles.categoryName, { color: colors.text }]}>
+        <Text
+          style={[styles.categoryName, { color: colors.text }]}
+          numberOfLines={2}
+          ellipsizeMode="tail"
+        >
           {category.name}
         </Text>
-      </View>
-      <View style={styles.categoryActions}>
-        <TouchableOpacity
-          onPress={() => onEdit(category)}
-          style={styles.actionButton}
-        >
-          <Ionicons
-            name="create-outline"
-            size={18}
-            color={colors.textSecondary}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => onDelete(category)}
-          style={styles.actionButton}
-        >
-          <Ionicons
-            name="trash-outline"
-            size={18}
-            color={colors.error || "#ff4444"}
-          />
-        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
@@ -88,19 +66,24 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   categoryContent: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    marginRight: 12,
   },
   chevron: {
     width: 20,
   },
   categoryName: {
     fontSize: 15,
+    flex: 1,
+    flexWrap: "wrap",
   },
   categoryActions: {
     flexDirection: "row",
     gap: 12,
+    alignItems: "center",
   },
   actionButton: {
     padding: 4,

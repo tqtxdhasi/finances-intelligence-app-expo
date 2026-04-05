@@ -77,6 +77,7 @@ export const useTheme = () => {
         padding: 16,
         borderWidth: 1,
         borderColor: colors.border,
+        marginTop: 12,
       },
       title: {
         fontSize: 20,

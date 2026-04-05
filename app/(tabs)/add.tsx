@@ -1,10 +1,13 @@
 // app/screens/AddScreen.tsx
 import FilePreviewModal from "@/components/add/FilePreviewModal";
+import { useCreateReceipt } from "@/hooks/receipt/createReceipt";
 import { useSettingsStore } from "@/stores/settingsStore";
+import { ReceiptItem } from "@/types/data";
 import { useTheme } from "@/utils/theme";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -15,135 +18,101 @@ import {
   View,
 } from "react-native";
 import BasicInfoSection from "../../components/add/BasicInfoSection";
-import CurrencyModal from "../../components/add/CurrencyModal";
-import DatePickerModal from "../../components/add/DatePickerModal";
 import FileUploadSection from "../../components/add/FileUploadSection";
-import ItemsSection from "../../components/add/ItemsSection";
-import MerchantModal from "../../components/add/MerchantModal";
-import TimePickerModal from "../../components/add/TimePickerModal";
-import { useReceiptsD1 } from "../../hooks/useReceipts";
-import { Item, ReceiptFile } from "../../types/receipt";
+import { useUser } from "../../hooks/useUser";
+import { CreateReceiptDTO, ReceiptFile } from "../../types/receipt";
 
 export default function AddScreen() {
   const router = useRouter();
-  const { createReceipt } = useReceiptsD1();
+  const { createReceipt, loading: saving } = useCreateReceipt();
   const { colors, styles: themeStyles } = useTheme();
-  const { currency: userCurrency } = useSettingsStore(); // 👈 get saved currency
+  const { currency: userCurrency } = useSettingsStore();
+  const { userId, loading: userLoading } = useUser(); // ✅ get userId
 
   // Form state
+  const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(
+    null,
+  );
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(
+    null,
+  );
   const [merchantName, setMerchantName] = useState("");
+  const [merchantAddress, setMerchantAddress] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [time, setTime] = useState("");
   const [originalCurrency, setOriginalCurrency] = useState(
     userCurrency || "USD",
   );
-  const [originalTotal, setOriginalTotal] = useState("");
   const [file, setFile] = useState<ReceiptFile | null>(null);
-  const [items, setItems] = useState<Item[]>([
+  const [receiptItems, setReceiptItems] = useState<ReceiptItem[]>([
     {
       id: Date.now().toString(),
       name: "",
-      quantity: "1",
+      quantity: 1,
       unit: "pcs",
       price: "",
     },
   ]);
-  const [saving, setSaving] = useState(false);
+  const [previewModalVisible, setPreviewModalVisible] = useState(false);
 
   // Keep local currency in sync with store currency
   useEffect(() => {
     setOriginalCurrency(userCurrency || "USD");
   }, [userCurrency]);
 
-  // Modal visibility
-  const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
-  const [showDatePickerModal, setShowDatePickerModal] = useState(false);
-  const [showTimePickerModal, setShowTimePickerModal] = useState(false);
-  const [merchantModalVisible, setMerchantModalVisible] = useState(false);
-  const [previewModalVisible, setPreviewModalVisible] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedTime, setSelectedTime] = useState<Date>(new Date());
-
   // Item handlers
-  const addNewItem = () => {
-    const newItem: Item = {
+  const addNewReceiptItem = () => {
+    const newReceiptItem: ReceiptItem = {
       id: Date.now().toString(),
       name: "",
-      quantity: "1",
+      quantity: 1,
       unit: "pcs",
       price: "",
     };
-    setItems([...items, newItem]);
+    setReceiptItems([...receiptItems, newReceiptItem]);
   };
 
-  const removeItem = (id: string) => {
-    if (items.length === 1) {
-      Alert.alert("Cannot Remove", "At least one item is required");
+  const removeReceiptItem = (id: string) => {
+    if (receiptItems.length === 1) {
+      Alert.alert("Cannot Remove", "At least one receipt item is required");
       return;
     }
-    setItems(items.filter((item) => item.id !== id));
+    setReceiptItems(
+      receiptItems.filter((receiptItem) => receiptItem.id !== id),
+    );
   };
 
-  const updateItem = (id: string, updates: Partial<Item>) => {
-    setItems(
-      items.map((item) => (item.id === id ? { ...item, ...updates } : item)),
+  const updateReceiptItem = (id: string, updates: Partial<ReceiptItem>) => {
+    setReceiptItems(
+      receiptItems.map((receiptItem) =>
+        receiptItem.id === id ? { ...receiptItem, ...updates } : receiptItem,
+      ),
     );
   };
 
   // Total calculation
   const calculateTotal = () => {
-    const sum = items.reduce((acc, item) => {
-      const price = parseFloat(item.price) || 0;
-      const quantity = parseFloat(item.quantity) || 0;
+    const sum = receiptItems.reduce((acc, receiptItem) => {
+      const price = parseFloat(receiptItem.price) || 0;
+      const quantity = parseFloat(receiptItem.quantity) || 0;
       return acc + price * quantity;
     }, 0);
     return sum.toFixed(2);
   };
 
-  useEffect(() => {
-    setOriginalTotal(calculateTotal());
-  }, [items]);
-
-  // Date/Time handlers
-  const onDateChange = (event: any, selectedDate?: Date) => {
-    if (selectedDate) setSelectedDate(selectedDate);
-  };
-
-  const confirmDate = () => {
-    const year = selectedDate.getFullYear();
-    const month = (selectedDate.getMonth() + 1).toString().padStart(2, "0");
-    const day = selectedDate.getDate().toString().padStart(2, "0");
-    setDate(`${year}-${month}-${day}`);
-    setShowDatePickerModal(false);
-  };
-
-  const cancelDate = () => setShowDatePickerModal(false);
-
-  const onTimeChange = (event: any, selectedDate?: Date) => {
-    if (selectedDate) setSelectedTime(selectedDate);
-  };
-
-  const confirmTime = () => {
-    const hours = selectedTime.getHours().toString().padStart(2, "0");
-    const minutes = selectedTime.getMinutes().toString().padStart(2, "0");
-    setTime(`${hours}:${minutes}`);
-    setShowTimePickerModal(false);
-  };
-
-  const cancelTime = () => setShowTimePickerModal(false);
-
-  // Currency handler
-  const selectCurrency = (currency: string) => {
-    setOriginalCurrency(currency);
-    setCurrencyModalVisible(false);
-  };
+  const originalTotal = calculateTotal();
 
   // Merchant handler
   const handleSelectMerchant = (merchant: {
+    id: string;
     name: string;
     address: string;
+    locationId?: string;
   }) => {
     setMerchantName(merchant.name);
+    setMerchantAddress(merchant.address);
+    setSelectedMerchantId(merchant.id);
+    setSelectedLocationId(merchant.locationId || null);
   };
 
   // Validation and save
@@ -152,20 +121,24 @@ export default function AddScreen() {
       Alert.alert("Error", "Merchant name is required");
       return false;
     }
+    if (!selectedMerchantId) {
+      Alert.alert("Error", "Please select a merchant from the list");
+      return false;
+    }
     if (!date) {
       Alert.alert("Error", "Date is required");
       return false;
     }
-    if (items.length === 0) {
+    if (receiptItems.length === 0) {
       Alert.alert("Error", "At least one item is required");
       return false;
     }
-    for (const item of items) {
-      if (!item.name.trim()) {
-        Alert.alert("Error", "All items must have a name");
+    for (const receiptItem of receiptItems) {
+      if (!receiptItem.name.trim()) {
+        Alert.alert("Error", "All receipt items must have a name");
         return false;
       }
-      if (!item.price || parseFloat(item.price) <= 0) {
+      if (!receiptItem.price || parseFloat(receiptItem.price) <= 0) {
         Alert.alert("Error", "All items must have a valid price");
         return false;
       }
@@ -174,66 +147,80 @@ export default function AddScreen() {
   };
 
   const saveReceipt = async () => {
+    if (!userId) {
+      Alert.alert("Error", "User not initialized. Please restart the app.");
+      return;
+    }
     if (!validateForm()) return;
 
-    setSaving(true);
     try {
-      const receiptData = {
-        merchant: merchantName,
-        date,
-        time: time || undefined,
+      const dateTimeStr = time
+        ? `${date}T${time}:00.000Z`
+        : `${date}T00:00:00.000Z`;
+
+      const subtotal = parseFloat(originalTotal);
+      const tax = 0;
+      const total = subtotal + tax;
+
+      const receiptItems = receiptItems.map((receiptItem) => ({
+        rawName: receiptItem.name,
+        quantity: parseFloat(receiptItem.quantity),
+        unitPrice: parseFloat(receiptItem.price),
+        totalPrice:
+          parseFloat(receiptItem.price) * parseFloat(receiptItem.quantity),
+        discountAmount: 0,
+        unitOfMeasure: receiptItem.unit,
+      }));
+
+      const receiptData: CreateReceiptDTO = {
+        userId,
+        merchantId: selectedMerchantId!,
+        locationId: selectedLocationId || undefined, // Note: use undefined, not null
+        date: dateTimeStr,
+        subtotalAmount: subtotal,
+        taxAmount: tax,
+        totalAmount: total,
         currency: originalCurrency,
-        items: items.map((item) => ({
-          name: item.name,
-          quantity: parseFloat(item.quantity),
-          unit: item.unit,
-          price: parseFloat(item.price),
-        })),
-        file: file
-          ? {
-              uri: file.uri,
-              type: file.type,
-              name: file.name,
-            }
-          : null,
+        paymentType: undefined,
+        items: receiptItems,
+        imagePath: file?.uri,
       };
 
+      console.log("📦 Sending receipt data:", receiptData);
       await createReceipt(receiptData);
 
-      Alert.alert("Success", "Receipt saved successfully!", [
+      // Reset form and navigate back
+      setMerchantName("");
+      setSelectedMerchantId(null);
+      setSelectedLocationId(null);
+      setDate(new Date().toISOString().split("T")[0]);
+      setTime("");
+      setOriginalCurrency(userCurrency || "USD");
+      setFile(null);
+      setReceiptItems([
         {
-          text: "OK",
-          onPress: () => {
-            // Reset form
-            setMerchantName("");
-            setDate(new Date().toISOString().split("T")[0]);
-            setTime("");
-            setOriginalCurrency(userCurrency || "USD");
-            setFile(null);
-            setItems([
-              {
-                id: Date.now().toString(),
-                name: "",
-                quantity: "1",
-                unit: "pcs",
-                price: "",
-              },
-            ]);
-            setSaving(false);
-            router.back();
-          },
+          id: Date.now().toString(),
+          name: "",
+          quantity: 1,
+          unit: "pcs",
+          price: "",
         },
       ]);
+      router.back();
     } catch (error) {
-      console.error("Failed to save receipt:", error);
-      Alert.alert(
-        "Error",
-        "Failed to save receipt. Please check your connection and try again.",
-      );
-    } finally {
-      setSaving(false);
+      // Error is already handled in the hook
+      console.error("Save failed:", error);
     }
   };
+
+  // Optional loading state while user is being initialised
+  if (userLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -243,10 +230,11 @@ export default function AddScreen() {
       <ScrollView
         style={[themeStyles.container, styles.container]}
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled" // Dismiss keyboard when tapping outside
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.content}>
           <Text style={[themeStyles.title, styles.title]}>Add New Receipt</Text>
+
           <FileUploadSection
             file={file}
             onFileSelected={setFile}
@@ -256,21 +244,23 @@ export default function AddScreen() {
 
           <BasicInfoSection
             merchantName={merchantName}
-            onMerchantPress={() => setMerchantModalVisible(true)}
+            merchantAddress={merchantAddress}
+            onMerchantSelect={handleSelectMerchant}
             date={date}
-            onDatePress={() => setShowDatePickerModal(true)}
+            onDateChange={setDate}
             time={time}
-            onTimePress={() => setShowTimePickerModal(true)}
+            onTimeChange={setTime}
             originalCurrency={originalCurrency}
-            onCurrencyPress={() => setCurrencyModalVisible(true)}
+            onCurrencyChange={setOriginalCurrency}
             originalTotal={originalTotal}
+            preferredCurrency={userCurrency}
           />
 
-          <ItemsSection
-            items={items}
-            onAddItem={addNewItem}
-            onUpdateItem={updateItem}
-            onRemoveItem={removeItem}
+          <ReceiptItemsSection
+            receiptItems={receiptItems}
+            onAddReceiptItem={addNewReceiptItem}
+            onUpdateReceiptItem={updateReceiptItem}
+            onRemoveReceiptItem={removeReceiptItem}
             originalCurrency={originalCurrency}
           />
 
@@ -291,32 +281,6 @@ export default function AddScreen() {
           <View style={styles.bottomSpacer} />
         </View>
 
-        <CurrencyModal
-          visible={currencyModalVisible}
-          selectedCurrency={originalCurrency}
-          onSelectCurrency={selectCurrency}
-          onClose={() => setCurrencyModalVisible(false)}
-          preferredCurrency={userCurrency} // 👈 show user's currency at top
-        />
-        <DatePickerModal
-          visible={showDatePickerModal}
-          selectedDate={selectedDate}
-          onDateChange={onDateChange}
-          onConfirm={confirmDate}
-          onCancel={cancelDate}
-        />
-        <TimePickerModal
-          visible={showTimePickerModal}
-          selectedTime={selectedTime}
-          onTimeChange={onTimeChange}
-          onConfirm={confirmTime}
-          onCancel={cancelTime}
-        />
-        <MerchantModal
-          visible={merchantModalVisible}
-          onSelectMerchant={handleSelectMerchant}
-          onClose={() => setMerchantModalVisible(false)}
-        />
         <FilePreviewModal
           visible={previewModalVisible}
           file={file}

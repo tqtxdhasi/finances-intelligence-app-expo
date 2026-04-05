@@ -5,34 +5,23 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface HeaderProps {
   title: string;
-  viewMode: "list" | "grid";
-  onViewModeToggle: () => void;
-  onFilterPress: () => void;
+  onAddReceiptPress: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({
-  title,
-  viewMode,
-  onViewModeToggle,
-  onFilterPress,
-}) => {
+const Header: React.FC<HeaderProps> = ({ title, onAddReceiptPress }) => {
   const { colors, styles: themeStyles } = useTheme();
 
   return (
     <View style={styles.header}>
       <Text style={[themeStyles.title, styles.title]}>{title}</Text>
-      <View style={styles.headerActions}>
-        <TouchableOpacity onPress={onViewModeToggle}>
-          <Ionicons
-            name={viewMode === "list" ? "grid-outline" : "list-outline"}
-            size={24}
-            color={colors.text}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onFilterPress} style={styles.filterIcon}>
-          <Ionicons name="filter-outline" size={24} color={colors.text} />
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity onPress={onAddReceiptPress}>
+        <View style={styles.addButton}>
+          <Ionicons name="add-circle-outline" size={24} color={colors.accent} />
+          <Text style={[styles.addButtonText, { color: colors.accent }]}>
+            Add Receipt
+          </Text>
+        </View>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -50,10 +39,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
   },
-  headerActions: {
+  addButton: {
     flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
-  filterIcon: {
-    marginLeft: 16,
+  addButtonText: {
+    fontSize: 16,
+    fontWeight: "500",
   },
 });

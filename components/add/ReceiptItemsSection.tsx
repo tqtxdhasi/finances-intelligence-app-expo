@@ -3,7 +3,7 @@ import { Item } from "@/types/receipt";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import ItemCard from "./ItemCard";
+import ItemCard from "./ReceiptItemCard";
 import { useTheme } from "@/utils/theme";
 
 interface Props {

@@ -205,11 +205,7 @@ export default function ReceiptsScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Header
         title="Receipts"
-        viewMode={viewMode}
-        onViewModeToggle={() =>
-          setViewMode(viewMode === "list" ? "grid" : "list")
-        }
-        onFilterPress={() => setFilterModalVisible(true)}
+        onAddReceiptPress={() => router.push("/(tabs)/add")}
       />
 
       <SearchBar

@@ -36,17 +36,6 @@ export const ReceiptDetailHeader: React.FC<Props> = ({
       ) : (
         <View style={styles.headerButtons}>
           <TouchableOpacity
-            onPress={onCancel}
-            style={[
-              styles.cancelButton,
-              { backgroundColor: colors.surfaceLight },
-            ]}
-          >
-            <Text style={[styles.cancelButtonText, { color: colors.text }]}>
-              Cancel
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
             onPress={onSave}
             style={[
               styles.saveHeaderButton,
@@ -56,6 +45,17 @@ export const ReceiptDetailHeader: React.FC<Props> = ({
           >
             <Text style={[styles.saveHeaderButtonText, { color: colors.text }]}>
               {saving ? "Saving..." : "Save"}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={onCancel}
+            style={[
+              styles.cancelButton,
+              { backgroundColor: colors.surfaceLight },
+            ]}
+          >
+            <Text style={[styles.cancelButtonText, { color: colors.text }]}>
+              Cancel
             </Text>
           </TouchableOpacity>
         </View>

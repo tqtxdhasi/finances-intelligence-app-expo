@@ -35,11 +35,6 @@ export const BasicInfoSection: React.FC<Props> = ({
   const { colors } = useTheme();
   const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
 
-  const formatDateTime = (dateStr: string, timeStr: string) => {
-    if (!timeStr) return dateStr;
-    return `${dateStr} at ${timeStr}`;
-  };
-
   return (
     <View style={[styles.section, { backgroundColor: colors.surface }]}>
       <Text style={[styles.sectionTitle, { color: colors.text }]}>
@@ -62,105 +57,103 @@ export const BasicInfoSection: React.FC<Props> = ({
             placeholderTextColor={colors.textMuted}
           />
         ) : (
-          <Text style={[styles.value, { color: colors.text }]}>
-            {receipt.merchant}
-          </Text>
+          <Text style={[{ color: colors.text }]}>{receipt.merchant}</Text>
         )}
       </View>
 
-      <View style={styles.infoRow}>
-        <Text style={[styles.label, { color: colors.textSecondary }]}>
-          Date
-        </Text>
-        {isEditing ? (
-          <TextInput
-            style={[
-              styles.editInput,
-              { backgroundColor: colors.surfaceLight, color: colors.text },
-            ]}
-            value={editData.date}
-            onChangeText={(text) => onEditField("date", text)}
-            placeholder="YYYY-MM-DD"
-            placeholderTextColor={colors.textMuted}
-          />
-        ) : (
-          <Text style={[styles.value, { color: colors.text }]}>
-            {formatDateTime(receipt.date, receipt.time)}
+      <View style={styles.dateTimeSection}>
+        <View style={styles.dateTimeField}>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>
+            Date
           </Text>
-        )}
-      </View>
+          {isEditing ? (
+            <TextInput
+              style={[
+                styles.editInput,
+                { backgroundColor: colors.surfaceLight, color: colors.text },
+              ]}
+              value={editData.date}
+              onChangeText={(text) => onEditField("date", text)}
+              placeholder="YYYY-MM-DD"
+              placeholderTextColor={colors.textMuted}
+            />
+          ) : (
+            <Text style={[{ color: colors.text }]}>{receipt.date}</Text>
+          )}
+        </View>
 
-      {isEditing && (
-        <View style={styles.infoRow}>
+        <View style={styles.dateTimeField}>
           <Text style={[styles.label, { color: colors.textSecondary }]}>
             Time
           </Text>
-          <TextInput
-            style={[
-              styles.editInput,
-              { backgroundColor: colors.surfaceLight, color: colors.text },
-            ]}
-            value={editData.time}
-            onChangeText={(text) => onEditField("time", text)}
-            placeholder="HH:MM:SS"
-            placeholderTextColor={colors.textMuted}
-          />
-        </View>
-      )}
-
-      <View style={styles.infoRow}>
-        <Text style={[styles.label, { color: colors.textSecondary }]}>
-          Currency
-        </Text>
-        {isEditing ? (
-          <>
-            <TouchableOpacity
+          {isEditing ? (
+            <TextInput
               style={[
-                styles.currencySelector,
-                {
-                  backgroundColor: colors.surfaceLight,
-                  borderColor: colors.border,
-                },
+                styles.editInput,
+                { backgroundColor: colors.surfaceLight, color: colors.text },
               ]}
-              onPress={() => setCurrencyModalVisible(true)}
-            >
-              <Text
-                style={[styles.currencySelectorText, { color: colors.text }]}
-              >
-                {editData.currency}
-              </Text>
-              <Ionicons
-                name="chevron-down"
-                size={20}
-                color={colors.textSecondary}
-              />
-            </TouchableOpacity>
-            <CurrencyModal
-              visible={currencyModalVisible}
-              selectedCurrency={editData.currency}
-              onSelectCurrency={(code) => {
-                onCurrencyChange(code);
-                setCurrencyModalVisible(false);
-              }}
-              onClose={() => setCurrencyModalVisible(false)}
-              preferredCurrency={editData.currency}
+              value={editData.time}
+              onChangeText={(text) => onEditField("time", text)}
+              placeholder="HH:MM:SS"
+              placeholderTextColor={colors.textMuted}
             />
-          </>
-        ) : (
-          <Text style={[styles.value, { color: colors.text }]}>
-            {receipt.currency}
-          </Text>
-        )}
+          ) : (
+            <Text style={[{ color: colors.text }]}>{receipt.time}</Text>
+          )}
+        </View>
       </View>
 
-      <View style={styles.infoRow}>
-        <Text style={[styles.label, { color: colors.textSecondary }]}>
-          Total
-        </Text>
-        <Text style={[styles.value, styles.total, { color: colors.accent }]}>
-          {editData.currency}{" "}
-          {isEditing ? calculateTotal() : receipt.total.toFixed(2)}
-        </Text>
+      <View style={styles.currencyTotalRow}>
+        <View style={styles.currencyField}>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>
+            Currency
+          </Text>
+          {isEditing ? (
+            <>
+              <TouchableOpacity
+                style={[
+                  styles.currencySelector,
+                  {
+                    backgroundColor: colors.surfaceLight,
+                    borderColor: colors.border,
+                  },
+                ]}
+                onPress={() => setCurrencyModalVisible(true)}
+              >
+                <Text
+                  style={[styles.currencySelectorText, { color: colors.text }]}
+                >
+                  {editData.currency}
+                </Text>
+                <Ionicons
+                  name="chevron-down"
+                  size={20}
+                  color={colors.textSecondary}
+                />
+              </TouchableOpacity>
+              <CurrencyModal
+                visible={currencyModalVisible}
+                selectedCurrency={editData.currency}
+                onSelectCurrency={(code) => {
+                  onCurrencyChange(code);
+                  setCurrencyModalVisible(false);
+                }}
+                onClose={() => setCurrencyModalVisible(false)}
+                preferredCurrency={editData.currency}
+              />
+            </>
+          ) : (
+            <Text style={[{ color: colors.text }]}>{receipt.currency}</Text>
+          )}
+        </View>
+        <View style={styles.totalField}>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>
+            Total
+          </Text>
+          <Text style={[styles.total, { color: colors.accent }]}>
+            {isEditing ? calculateTotal() : receipt.total.toFixed(2)}
+          </Text>
+        </View>
       </View>
     </View>
   );
@@ -180,14 +173,32 @@ const styles = StyleSheet.create({
   infoRow: {
     marginBottom: 16,
   },
+  dateTimeSection: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 16,
+  },
+  dateTimeField: {
+    flex: 1,
+  },
+  currencyTotalRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 0,
+  },
+  currencyField: {
+    flex: 1,
+  },
+  totalField: {
+    flex: 1,
+  },
   label: {
     fontSize: 14,
     marginBottom: 8,
   },
-  value: {
-    fontSize: 16,
-  },
+
   total: {
+    alignItems: "center",
     fontSize: 20,
     fontWeight: "bold",
   },

@@ -37,6 +37,8 @@ export const DataModal: React.FC<DataModalProps> = ({
   const title =
     mode === "add" ? `Add New ${tab.slice(0, -1)}` : `Edit ${tab.slice(0, -1)}`;
 
+  const isMerchant = tab === "merchants";
+
   return (
     <Modal
       animationType="slide"
@@ -58,6 +60,7 @@ export const DataModal: React.FC<DataModalProps> = ({
           </View>
 
           <ScrollView>
+            {/* Name field (always shown) */}
             <Text style={[styles.inputLabel, { color: colors.text }]}>
               Name *
             </Text>
@@ -75,10 +78,11 @@ export const DataModal: React.FC<DataModalProps> = ({
               onChangeText={(text) => onChange({ ...formData, name: text })}
             />
 
-            {tab === "categories" && (
+            {/* Address field (merchants only) */}
+            {isMerchant && (
               <>
                 <Text style={[styles.inputLabel, { color: colors.text }]}>
-                  Parent Category (Optional)
+                  Address
                 </Text>
                 <TextInput
                   style={[
@@ -88,79 +92,38 @@ export const DataModal: React.FC<DataModalProps> = ({
                       color: colors.text,
                     },
                   ]}
-                  placeholder="Parent category ID"
+                  placeholder="Enter merchant address"
                   placeholderTextColor={colors.textMuted}
-                  value={formData.parentId}
+                  value={formData.address || ""}
                   onChangeText={(text) =>
-                    onChange({ ...formData, parentId: text })
+                    onChange({ ...formData, address: text })
                   }
+                  multiline
                 />
               </>
             )}
 
-            {tab === "items" && (
-              <>
-                <Text style={[styles.inputLabel, { color: colors.text }]}>
-                  Normalized Name
-                </Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: colors.surfaceLight,
-                      color: colors.text,
-                    },
-                  ]}
-                  placeholder="e.g., milk, bread"
-                  placeholderTextColor={colors.textMuted}
-                  value={formData.name.toLowerCase().replace(/\s+/g, "-")}
-                  editable={false}
-                />
-                <Text style={[styles.inputLabel, { color: colors.text }]}>
-                  Category
-                </Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: colors.surfaceLight,
-                      color: colors.text,
-                    },
-                  ]}
-                  placeholder="Category name"
-                  placeholderTextColor={colors.textMuted}
-                  value={formData.categoryId}
-                  onChangeText={(text) =>
-                    onChange({ ...formData, categoryId: text })
-                  }
-                />
-              </>
-            )}
-            {tab === "merchants" && (
-              <>
-                <Text style={[styles.inputLabel, { color: colors.text }]}>
-                  Locations
-                </Text>
-                <TouchableOpacity
-                  style={[
-                    styles.manageLocationsButton,
-                    { backgroundColor: colors.surfaceLight },
-                  ]}
-                  onPress={() => {
-                    onOpenLocationManager();
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.manageLocationsButtonText,
-                      { color: colors.accent },
-                    ]}
-                  >
-                    Manage Locations ({formData.locations?.length || 0})
-                  </Text>
-                </TouchableOpacity>
-              </>
-            )}
+            {/* Locations button (keep as is) */}
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Locations
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.manageLocationsButton,
+                { backgroundColor: colors.surfaceLight },
+              ]}
+              onPress={onOpenLocationManager}
+            >
+              <Text
+                style={[
+                  styles.manageLocationsButtonText,
+                  { color: colors.accent },
+                ]}
+              >
+                Manage Locations ({formData.locations?.length || 0})
+              </Text>
+            </TouchableOpacity>
+
             <TouchableOpacity
               style={[styles.saveButton, { backgroundColor: colors.accent }]}
               onPress={onSave}

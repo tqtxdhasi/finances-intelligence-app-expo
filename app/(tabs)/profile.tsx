@@ -1,23 +1,37 @@
+// app/profile.tsx (or wherever ProfileScreen is)
 import AccentColorSelector from "@/components/profile/AccentColorSelector";
 import CountrySelector from "@/components/profile/CountrySelector";
 import CurrencySelector from "@/components/profile/CurrencySelector";
 import ResetButton from "@/components/profile/ResetButton";
 import ThemeSelector from "@/components/profile/ThemeSelector";
+import { clearDatabase } from "@/hooks/clearDatabase";
+import { useUser } from "@/hooks/useUser"; // Add this import
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useTheme } from "@/utils/theme";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import currencyCodes from "currency-codes";
+import { useRouter } from "expo-router";
 import React from "react";
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
-import { ScrollView, StyleSheet, Text, View } from "react-native";
 export function getCurrencyForCountry(countryCode: string): string | undefined {
   const currencies = currencyCodes.data;
-  // Find the first currency that lists this country in its `countries` array
   const matched = currencies.find((curr) =>
     curr.countries?.includes(countryCode),
   );
   return matched?.code;
 }
+
 export default function ProfileScreen() {
+  const router = useRouter();
+  const { updateUserSettings, userId } = useUser(); // Add this
   const {
     accentColor,
     currency,
@@ -25,32 +39,119 @@ export default function ProfileScreen() {
     theme,
     currencyManuallySet,
     update,
-    reset,
+    reset: resetSettings,
   } = useSettingsStore();
   const { colors, styles: themeStyles } = useTheme();
 
-  // Handle country change: update country, and optionally update currency
+  // Sync store changes to database immediately
+  const handleUpdate = async (
+    newSettings: Partial<{
+      currency: string;
+      country: string;
+      theme: "light" | "dark";
+      accentColor: string;
+      currencyManuallySet?: boolean;
+    }>,
+  ) => {
+    // Update local store first
+    update(newSettings);
+
+    // Then sync to database if user exists
+    if (userId) {
+      const dbUpdates: any = {};
+      if (newSettings.currency !== undefined)
+        dbUpdates.currency = newSettings.currency;
+      if (newSettings.country !== undefined)
+        dbUpdates.country = newSettings.country;
+      if (newSettings.theme !== undefined) dbUpdates.theme = newSettings.theme;
+      if (newSettings.accentColor !== undefined)
+        dbUpdates.accentColor = newSettings.accentColor;
+
+      if (Object.keys(dbUpdates).length > 0) {
+        await updateUserSettings(dbUpdates);
+      }
+    }
+  };
+
   const handleCountryChange = (newCountry: string) => {
-    // If currency has not been manually set, try to suggest a currency for the new country
     if (!currencyManuallySet) {
       const suggestedCurrency = getCurrencyForCountry(newCountry);
       if (suggestedCurrency) {
-        update({ country: newCountry, currency: suggestedCurrency });
+        handleUpdate({ country: newCountry, currency: suggestedCurrency });
         return;
       }
     }
-    // Otherwise, just update the country
-    update({ country: newCountry });
+    handleUpdate({ country: newCountry });
   };
 
-  // Handle manual currency change: update currency and mark it as manually set
   const handleCurrencyChange = (newCurrency: string) => {
-    update({ currency: newCurrency, currencyManuallySet: true });
+    handleUpdate({ currency: newCurrency, currencyManuallySet: true });
   };
 
-  // Handle reset: this will also reset currencyManuallySet to false
-  const handleReset = () => {
-    reset();
+  const handleThemeChange = (newTheme: "light" | "dark") => {
+    handleUpdate({ theme: newTheme });
+  };
+
+  const handleAccentColorChange = (newColor: string) => {
+    handleUpdate({ accentColor: newColor });
+  };
+
+  const handleResetSettings = async () => {
+    // Reset to defaults
+    const defaultSettings = {
+      currency: "PLN",
+      country: "PL",
+      theme: "dark" as const,
+      accentColor: "#ff9800",
+      currencyManuallySet: false,
+    };
+
+    // Update local store
+    resetSettings();
+
+    // Sync defaults to database
+    if (userId) {
+      await updateUserSettings({
+        currency: defaultSettings.currency,
+        country: defaultSettings.country,
+        theme: defaultSettings.theme,
+        accentColor: defaultSettings.accentColor,
+      });
+    }
+  };
+
+  // Reset everything (user + settings) and go back to onboarding
+  const handleResetApp = async () => {
+    Alert.alert(
+      "Reset App",
+      "This will clear all your data and restart the app. You will start as a new user. Are you sure?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Reset",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              // Clear AsyncStorage keys
+              await AsyncStorage.removeItem("@receipt_user_id");
+              await AsyncStorage.removeItem("@app_first_launch");
+              await AsyncStorage.removeItem("app_settings"); // Clear settings store
+
+              // Clear all database tables
+              await clearDatabase();
+
+              // Reset settings store
+              resetSettings();
+
+              // Navigate to onboarding
+              router.replace("/onboarding");
+            } catch (error: any) {
+              Alert.alert("Error", `Reset failed: ${error.message}`);
+            }
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -62,10 +163,7 @@ export default function ProfileScreen() {
       {/* Theme Section */}
       <View style={[themeStyles.card, styles.section]}>
         <Text style={[themeStyles.title, styles.sectionTitle]}>Theme</Text>
-        <ThemeSelector
-          theme={theme}
-          onThemeChange={(t) => update({ theme: t })}
-        />
+        <ThemeSelector theme={theme} onThemeChange={handleThemeChange} />
       </View>
 
       {/* Accent Color Section */}
@@ -75,7 +173,7 @@ export default function ProfileScreen() {
         </Text>
         <AccentColorSelector
           accentColor={accentColor}
-          onColorChange={(color) => update({ accentColor: color })}
+          onColorChange={handleAccentColorChange}
         />
       </View>
 
@@ -84,7 +182,7 @@ export default function ProfileScreen() {
         <Text style={[themeStyles.title, styles.sectionTitle]}>Currency</Text>
         <CurrencySelector
           currency={currency}
-          onCurrencyChange={handleCurrencyChange} // wrapped handler
+          onCurrencyChange={handleCurrencyChange}
         />
       </View>
 
@@ -93,12 +191,26 @@ export default function ProfileScreen() {
         <Text style={[themeStyles.title, styles.sectionTitle]}>Country</Text>
         <CountrySelector
           country={country}
-          onCountryChange={handleCountryChange} // wrapped handler
+          onCountryChange={handleCountryChange}
         />
       </View>
 
-      {/* Reset Button */}
-      <ResetButton onReset={handleReset} />
+      {/* Reset Settings Button (settings only) */}
+      <ResetButton onReset={handleResetSettings} />
+
+      {/* Reset App Button (full wipe) */}
+      <TouchableOpacity
+        style={[styles.resetAppButton, { borderColor: colors.border }]}
+        onPress={handleResetApp}
+      >
+        <Text
+          style={[styles.resetAppText, { color: colors.error || "#ff4444" }]}
+        >
+          Reset App (Clear all data)
+        </Text>
+      </TouchableOpacity>
+
+      <View style={styles.bottomSpacer} />
     </ScrollView>
   );
 }
@@ -119,5 +231,21 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     marginBottom: 16,
+  },
+  resetAppButton: {
+    marginTop: 30,
+    marginBottom: 20,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  resetAppText: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  bottomSpacer: {
+    height: 40,
   },
 });

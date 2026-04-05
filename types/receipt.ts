@@ -1,6 +1,6 @@
 export interface Receipt {
   id: string;
-  merchant: string;
+  merchant_id: string;
   date: string;
   time?: string;
   currency: string;
@@ -12,33 +12,27 @@ export interface Receipt {
   items?: ReceiptItem[];
 }
 
-export interface ReceiptItem {
-  id: string;
-  receipt_id: string;
-  name: string;
-  quantity: number;
-  unit: string;
-  price: number;
-  created_at?: string;
-}
-
+// types/receipt.ts
 export interface CreateReceiptDTO {
-  merchant: string;
-  date: string;
-  time: string;
-  currency: string;
-  total: number;
+  userId: string; // required – from your auth system
+  merchantId: string; // instead of merchant name
+  locationId?: string; // optional
+  date: string; // ISO datetime string
+  subtotalAmount?: number; // before tax
+  taxAmount?: number; // default 0
+  totalAmount: number; // final total
+  currency: string; // e.g., "USD"
+  paymentType?: string; // e.g., "credit_card"
   items: {
-    name: string;
+    rawName: string; // original item name from receipt
     quantity: number;
-    unit: string;
-    price: number;
+    unitPrice: number; // price per unit
+    totalPrice: number; // quantity * unitPrice - discount
+    discountAmount?: number;
+    unitOfMeasure?: string; // "pcs", "kg", etc.
+    // optionally productId or categoryId can be resolved later
   }[];
-  file?: {
-    uri: string;
-    type: string;
-    name: string;
-  } | null;
+  imagePath?: string; // URI of the uploaded file
 }
 
 export interface UpdateReceiptDTO {
@@ -76,13 +70,15 @@ export interface QueryParams {
   maxTotal?: number;
   currency?: string;
 }
-export interface Item {
+
+export interface ReceiptItem {
   id: string;
+  receipt_id: string;
   name: string;
-  quantity: string;
+  quantity: number;
   unit: string;
-  price: string;
-  category?: string;
+  price: number;
+  created_at?: string;
 }
 
 export interface ReceiptFile {

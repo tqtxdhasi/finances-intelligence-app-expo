@@ -8,6 +8,7 @@ interface Settings {
   country: string;
   theme: "light" | "dark";
   accentColor: string;
+  currencyManuallySet: boolean; // ✅ added
 }
 
 interface SettingsStore extends Settings {
@@ -21,8 +22,8 @@ const defaultSettings: Settings = {
   country: "PL",
   theme: "dark",
   accentColor: "#ff9800",
+  currencyManuallySet: false, // ✅ added
 };
-
 // Create the store with persistence
 export const useSettingsStore = create<SettingsStore>()(
   persist(

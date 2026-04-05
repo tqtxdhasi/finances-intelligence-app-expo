@@ -1,38 +1,58 @@
-import { Item } from "@/types/data";
+import { Product } from "@/types/data";
 import { useTheme } from "@/utils/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-interface ItemsListItemProps {
-  item: Item;
-  onEdit: (item: Item) => void;
-  onDelete: (item: Item) => void;
+interface ProductsListProductProps {
+  item: Product;
+  onEdit: (item: Product) => void;
 }
 
-export const ItemsListItem: React.FC<ItemsListItemProps> = ({
+export const ProductsListProduct: React.FC<ProductsListProductProps> = ({
   item,
   onEdit,
-  onDelete,
 }) => {
   const { colors } = useTheme();
 
+  const handleDeleteProduct = (item: Product) => {
+    Alert.alert(
+      "Delete Product",
+      `Are you sure you want to delete "${item.name}"? This will affect ${item.occurrenceCount} receipts.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            console.log("Delete item:", item.id);
+            Alert.alert("Success", "Product deleted");
+          },
+        },
+      ],
+    );
+  };
+
   return (
-    <View style={[styles.listItem, { backgroundColor: colors.surface }]}>
-      <View style={styles.listItemContent}>
+    <View style={[styles.listProduct, { backgroundColor: colors.surface }]}>
+      <View style={styles.listProductContent}>
         <View style={styles.itemHeader}>
-          <Text style={[styles.listItemTitle, { color: colors.text }]}>
+          <Text style={[styles.listProductTitle, { color: colors.text }]}>
             {item.name}
           </Text>
           <Text style={[styles.normalizedName, { color: colors.accent }]}>
             {item.normalizedName}
           </Text>
         </View>
-        <View style={styles.listItemStats}>
-          <Text style={[styles.listItemStat, { color: colors.textSecondary }]}>
+        <View style={styles.listProductStats}>
+          <Text
+            style={[styles.listProductStat, { color: colors.textSecondary }]}
+          >
             {item.occurrenceCount} purchases
           </Text>
-          <Text style={[styles.listItemStat, { color: colors.textSecondary }]}>
+          <Text
+            style={[styles.listProductStat, { color: colors.textSecondary }]}
+          >
             ${item.totalSpent.toFixed(2)}
           </Text>
           {item.category && (
@@ -54,7 +74,7 @@ export const ItemsListItem: React.FC<ItemsListItemProps> = ({
           )}
         </View>
       </View>
-      <View style={styles.listItemActions}>
+      <View style={styles.listProductActions}>
         <TouchableOpacity
           onPress={() => onEdit(item)}
           style={styles.actionButton}
@@ -66,7 +86,7 @@ export const ItemsListItem: React.FC<ItemsListItemProps> = ({
           />
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => onDelete(item)}
+          onPress={() => handleDeleteProduct(item)}
           style={styles.actionButton}
         >
           <Ionicons
@@ -81,7 +101,7 @@ export const ItemsListItem: React.FC<ItemsListItemProps> = ({
 };
 
 const styles = StyleSheet.create({
-  listItem: {
+  listProduct: {
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -89,23 +109,23 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  listItemContent: {
+  listProductContent: {
     flex: 1,
   },
-  listItemTitle: {
+  listProductTitle: {
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 4,
   },
-  listItemStats: {
+  listProductStats: {
     flexDirection: "row",
     gap: 12,
     marginTop: 4,
   },
-  listItemStat: {
+  listProductStat: {
     fontSize: 12,
   },
-  listItemActions: {
+  listProductActions: {
     flexDirection: "row",
     gap: 12,
   },

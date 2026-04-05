@@ -1,23 +1,25 @@
-import { CategoriesTab } from "@/components/data/CategoriesTab";
+// app/data-management.tsx (or wherever DataManagementScreen is used)
+import { CategoriesTab } from "@/components/data/categories/CategoriesTab";
 import { DataModal } from "@/components/data/DataModal";
-import { ItemsTab } from "@/components/data/ItemsTab";
 import { LocationManagerModal } from "@/components/data/LocationManagerModal";
-import { MerchantsTab } from "@/components/data/MerchantsTab";
-import { Category, FormData, Item, Merchant } from "@/types/data";
+import { MerchantsTab } from "@/components/data/merchants/MerchantsTab";
+import { ProductsTab } from "@/components/data/products/ProductsTab";
+import { Category, Merchant, Product } from "@/types/data";
 import { useTheme } from "@/utils/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-type ActiveTab = "merchants" | "categories" | "items";
+type ActiveTab = "merchants" | "categories" | "products";
 
 export default function DataManagementScreen() {
   const { colors, styles: themeStyles } = useTheme();
   const [activeTab, setActiveTab] = useState<ActiveTab>("merchants");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<
-    Merchant | Category | Item | null
+  const [selectedTab, setSelectedTab] = useState<
+    Merchant | Category | Product | null
   >(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
 
@@ -28,94 +30,23 @@ export default function DataManagementScreen() {
   });
 
   const handleAddNew = () => {
-    setSelectedItem(null);
-    setFormData({ name: "", parentId: "", categoryId: "", locations: [] });
-    setShowAddModal(true);
+    if (activeTab === "merchants") {
+      router.push("/merchant/create");
+    } else if (activeTab === "categories") {
+      router.push("/categories/create");
+    } else if (activeTab === "products") {
+      // Navigate to product creation screen
+      router.push("/product/create");
+    } else {
+      setSelectedTab(null);
+      setFormData({ name: "", parentId: "", categoryId: "", locations: [] });
+      setShowAddModal(true);
+    }
   };
 
-  const handleEditMerchant = (merchant: Merchant) => {
-    setSelectedItem(merchant);
-    setFormData({
-      name: merchant.name,
-      parentId: "",
-      categoryId: "",
-      locations: merchant.locations.map((loc) => ({ ...loc })),
-    });
-    setShowEditModal(true);
-  };
-
-  const handleDeleteMerchant = (merchant: Merchant) => {
-    Alert.alert(
-      "Delete Merchant",
-      `Are you sure you want to delete "${merchant.name}"? This will affect ${merchant.receiptCount} receipts.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            console.log("Delete merchant:", merchant.id);
-            Alert.alert("Success", "Merchant deleted");
-          },
-        },
-      ],
-    );
-  };
-
-  const handleEditCategory = (category: Category) => {
-    setSelectedItem(category);
-    setFormData({
-      name: category.name,
-      parentId: category.parentId || "",
-      categoryId: "",
-    });
-    setShowEditModal(true);
-  };
-
-  const handleDeleteCategory = (category: Category) => {
-    Alert.alert(
-      "Delete Category",
-      `Are you sure you want to delete "${category.name}"? This may affect items and receipts.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            console.log("Delete category:", category.id);
-            Alert.alert("Success", "Category deleted");
-          },
-        },
-      ],
-    );
-  };
-
-  const handleEditItem = (item: Item) => {
-    setSelectedItem(item);
-    setFormData({
-      name: item.name,
-      parentId: "",
-      categoryId: item.category || "",
-    });
-    setShowEditModal(true);
-  };
-
-  const handleDeleteItem = (item: Item) => {
-    Alert.alert(
-      "Delete Item",
-      `Are you sure you want to delete "${item.name}"? This will affect ${item.occurrenceCount} receipts.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            console.log("Delete item:", item.id);
-            Alert.alert("Success", "Item deleted");
-          },
-        },
-      ],
-    );
+  const handleEditProduct = (product: Product) => {
+    // Navigate to edit screen with item ID
+    router.push(`/product/edit/${product.id}`);
   };
 
   const handleSave = () => {
@@ -124,9 +55,9 @@ export default function DataManagementScreen() {
       return;
     }
 
-    if (selectedItem) {
+    if (selectedTab) {
       // Edit mode
-      console.log("Edit:", selectedItem.id, formData);
+      console.log("Edit:", selectedTab.id, formData);
       Alert.alert("Success", `${activeTab.slice(0, -1)} updated successfully`);
     } else {
       // Add mode
@@ -137,6 +68,7 @@ export default function DataManagementScreen() {
     setShowAddModal(false);
     setShowEditModal(false);
   };
+
   const handleOpenLocationManager = () => {
     setShowLocationModal(true);
   };
@@ -146,18 +78,24 @@ export default function DataManagementScreen() {
     setFormData({ ...formData, locations });
     setShowLocationModal(false);
   };
+
+  // Show create button for all tabs now
+  const showCreateButton = true;
+
   return (
     <View style={[themeStyles.container, styles.container]}>
       <View style={styles.header}>
         <Text style={[themeStyles.title, styles.title]}>Data Management</Text>
-        {/* <TouchableOpacity style={styles.addButton} onPress={handleAddNew}>
-          <Ionicons name="add-circle" size={28} color={colors.accent} />
-        </TouchableOpacity> */}
+        {showCreateButton && (
+          <TouchableOpacity style={styles.createButton} onPress={handleAddNew}>
+            <Ionicons name="add-circle" size={28} color={colors.accent} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Tabs */}
       <View style={[styles.tabs, { backgroundColor: colors.surface }]}>
-        {(["merchants", "categories", "items"] as const).map((tab) => (
+        {(["merchants", "categories", "products"] as const).map((tab) => (
           <TouchableOpacity
             key={tab}
             style={[
@@ -197,20 +135,10 @@ export default function DataManagementScreen() {
       </View>
 
       {/* Tab Content */}
-      {activeTab === "merchants" && (
-        <MerchantsTab
-          onEditMerchant={handleEditMerchant}
-          onDeleteMerchant={handleDeleteMerchant}
-        />
-      )}
-      {activeTab === "categories" && (
-        <CategoriesTab
-          onEditCategory={handleEditCategory}
-          onDeleteCategory={handleDeleteCategory}
-        />
-      )}
-      {activeTab === "items" && (
-        <ItemsTab onEditItem={handleEditItem} onDeleteItem={handleDeleteItem} />
+      {activeTab === "merchants" && <MerchantsTab />}
+      {activeTab === "categories" && <CategoriesTab />}
+      {activeTab === "products" && (
+        <ProductsTab onEditProduct={handleEditProduct} />
       )}
 
       <DataModal
@@ -249,7 +177,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
   },
-  addButton: {
+  createButton: {
     padding: 4,
   },
   tabs: {

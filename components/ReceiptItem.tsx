@@ -1,4 +1,5 @@
 import { useTheme } from "@/utils/theme";
+import { Ionicons } from "@expo/vector-icons"; // Make sure to install expo/vector-icons if not already
 import { useRouter } from "expo-router";
 import React from "react";
 import {
@@ -18,7 +19,7 @@ interface ReceiptItemProps {
     id: string;
     merchant: string;
     date: string;
-    total: number;
+    total_amount: number;
     thumbnail: string;
     currency?: string;
   };
@@ -80,13 +81,42 @@ const ReceiptItem: React.FC<ReceiptItemProps> = ({
     }
   };
 
+  const renderThumbnail = () => {
+    if (item.thumbnail && item.thumbnail.trim() !== "null") {
+      return (
+        <Image
+          source={{ uri: item.thumbnail }}
+          style={viewMode === "list" ? styles.thumbnail : styles.gridThumbnail}
+        />
+      );
+    }
+
+    // Fallback icon when no thumbnail
+    return (
+      <View
+        style={[
+          viewMode === "list"
+            ? styles.thumbnailPlaceholder
+            : styles.gridThumbnailPlaceholder,
+          { backgroundColor: colors.surfaceVariant || colors.surface },
+        ]}
+      >
+        <Ionicons
+          name="receipt-outline"
+          size={viewMode === "list" ? 30 : 50}
+          color={colors.textSecondary}
+        />
+      </View>
+    );
+  };
+
   if (viewMode === "list") {
     return (
       <TouchableOpacity
         style={[styles.listItem, { backgroundColor: colors.surface }]}
         onPress={handlePress}
       >
-        <Image source={{ uri: item.thumbnail }} style={styles.thumbnail} />
+        {renderThumbnail()}
         <View style={styles.listContent}>
           <Text style={[styles.merchant, { color: colors.text }]}>
             {item.merchant}
@@ -95,7 +125,7 @@ const ReceiptItem: React.FC<ReceiptItemProps> = ({
             {formatDateTime(item.date)}
           </Text>
           <Text style={[styles.total, { color: colors.accent }]}>
-            {item.total.toFixed(2)} {currency}
+            {item.total_amount.toFixed(2)} {currency}
           </Text>
         </View>
       </TouchableOpacity>
@@ -107,7 +137,7 @@ const ReceiptItem: React.FC<ReceiptItemProps> = ({
       style={[styles.gridItem, { backgroundColor: colors.surface }]}
       onPress={handlePress}
     >
-      <Image source={{ uri: item.thumbnail }} style={styles.gridThumbnail} />
+      {renderThumbnail()}
       <Text style={[styles.gridMerchant, { color: colors.text }]}>
         {item.merchant}
       </Text>
@@ -138,6 +168,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginRight: 12,
   },
+  thumbnailPlaceholder: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   listContent: {
     flex: 1,
   },
@@ -166,6 +204,14 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 8,
     marginBottom: 8,
+  },
+  gridThumbnailPlaceholder: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    marginBottom: 8,
+    justifyContent: "center",
+    alignItems: "center",
   },
   gridMerchant: {
     fontSize: 16,

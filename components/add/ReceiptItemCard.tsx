@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import ItemNameModal from "./ItemNameModal";
+import ItemNameModal from "./ReceiptItemNameModal";
 import UnitModal from "./UnitModal";
 
 interface Props {
@@ -34,7 +34,11 @@ export default function ItemCard({
   const [unitModalVisible, setUnitModalVisible] = useState(false);
   const [itemNameModalVisible, setItemNameModalVisible] = useState(false);
   const [localExpanded, setLocalExpanded] = useState(isExpanded);
-
+  const sanitizeCode = (text: string) => {
+    // Keep only uppercase letters A-Z
+    let cleaned = text.toUpperCase().replace(/[^A-Z]/g, "");
+    return cleaned;
+  };
   useLayoutEffect(() => {
     if (isExpanded !== localExpanded) {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -169,7 +173,32 @@ export default function ItemCard({
               color={colors.textSecondary}
             />
           </TouchableOpacity>
-
+          <Text
+            style={{
+              fontSize: 14,
+              color: colors.textSecondary,
+              marginBottom: 8,
+              marginTop: 12,
+            }}
+          >
+            Receipt Code
+          </Text>
+          <TextInput
+            style={{
+              backgroundColor: colors.surface,
+              color: colors.text,
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+              fontSize: 16,
+            }}
+            placeholder="e.g., ABC123"
+            placeholderTextColor={colors.textMuted}
+            value={item.code || ""}
+            onChangeText={(text) => onUpdate({ code: sanitizeCode(text) })}
+            autoCapitalize="characters"
+            returnKeyType="done"
+          />
           <View
             style={{
               flexDirection: "row",
