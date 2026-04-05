@@ -10,14 +10,6 @@ export interface User {
   updated_at: string;
 }
 
-export interface UserMerchant {
-  user_id: string;
-  merchant_id: string;
-  visit_count: number;
-  total_spent: number;
-  last_visited_at: string;
-}
-
 export interface Merchant {
   id: string;
   name: string;
@@ -82,12 +74,6 @@ export interface Product {
   category?: string; // optional category name
 }
 
-export interface OffCategoryMapping {
-  off_tag: string;
-  category_id: string;
-  confidence: number;
-}
-
 export interface ProductAlias {
   id: string;
   product_id: string;
@@ -95,37 +81,6 @@ export interface ProductAlias {
   usage_count: number;
   last_used_at: string;
   user_id?: string | null;
-}
-
-export interface Receipt {
-  id: string;
-  user_id: string;
-  merchant_id: string;
-  location_id?: string | null;
-  date: string;
-  subtotal_amount?: number | null;
-  total_amount: number;
-  tax_amount?: number | null;
-  items_count?: number | null;
-  currency: string;
-  payment_type?: string | null;
-  image_path?: string | null;
-  created_at: string;
-}
-
-export interface ReceiptItem {
-  id: string;
-  receipt_id: string;
-  product_id?: string | null;
-  category_id?: string | null;
-  raw_name?: string | null;
-  quantity: number;
-  unit_price: number;
-  total_price: number;
-  unit_of_measure?: string | null;
-  normalized_quantity?: number | null;
-  normalized_unit?: string | null;
-  discount_amount?: number | null;
 }
 
 // ========== DTOs (Data Transfer Objects) ==========
@@ -157,4 +112,7 @@ export interface UpdateMerchantDTO {
   country_code?: string | null;
   tax_registration_id?: string | null;
   locations?: Location[]; // full replacement of linked locations
+}
+export interface CategoryTreeNode extends Category {
+  subcategories: CategoryTreeNode[];
 }

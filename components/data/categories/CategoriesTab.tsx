@@ -1,67 +1,57 @@
-import { getAllCategories } from "@/hooks/category/getAllCategories";
-import { Category } from "@/types/data";
+// components/CategoriesTab.tsx
+import { Category, CategoryTreeNode } from "@/types/data";
 import { useTheme } from "@/utils/theme";
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
-import { CategoryTree } from "./CategoryTree";
 import { StatsBar } from "../StatsBar";
+import { CategoryTree } from "./CategoryTree";
+import { useCategories } from "@/hooks/category/getAllCategories";
 
 export const CategoriesTab = () => {
   const { colors } = useTheme();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     new Set(),
   );
 
-  // Build tree from flat categories (parentId -> children)
-  const buildCategoryTree = (flatCategories: Category[]): Category[] => {
-    const categoryMap = new Map<string, Category>();
-    const roots: Category[] = [];
+  // Use React Query hook
+  const {
+    data: categories = [],
+    isLoading,
+    error,
+    isFetching, // Optional: shows when background refetching
+    refetch, // Manual refetch if needed
+  } = useCategories({
+    sortBy: "name",
+    sortOrder: "ASC",
+  });
 
-    // First, create map with empty subcategories
+  // Build category tree (memoized)
+  const buildCategoryTree = (
+    flatCategories: Category[],
+  ): CategoryTreeNode[] => {
+    const map = new Map<string, CategoryTreeNode>();
+    const roots: CategoryTreeNode[] = [];
+
     flatCategories.forEach((cat) => {
-      categoryMap.set(cat.id, { ...cat, subcategories: [] });
+      map.set(cat.id, { ...cat, subcategories: [] });
     });
 
-    // Then assign children to parents
     flatCategories.forEach((cat) => {
-      const node = categoryMap.get(cat.id);
-      if (node) {
-        if (cat.parent_id && categoryMap.has(cat.parent_id)) {
-          const parent = categoryMap.get(cat.parent_id);
-          if (parent && parent.subcategories) {
-            parent.subcategories.push(node);
-          }
-        } else {
-          roots.push(node);
-        }
+      const node = map.get(cat.id)!;
+      if (cat.parent_id && map.has(cat.parent_id)) {
+        map.get(cat.parent_id)!.subcategories.push(node);
+      } else {
+        roots.push(node);
       }
     });
 
     return roots;
   };
 
-  const loadCategories = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getAllCategories({ sortBy: "name", sortOrder: "ASC" });
-      setCategories(data);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to load categories",
-      );
-      console.error("Error loading categories:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadCategories();
-  }, []);
+  const categoryTree = useMemo(
+    () => buildCategoryTree(categories),
+    [categories],
+  );
 
   const toggleCategory = (id: string) => {
     setExpandedCategories((prev) => {
@@ -72,37 +62,64 @@ export const CategoriesTab = () => {
     });
   };
 
+  // Derived stats
   const totalCategories = categories.length;
   const mainCategories = categories.filter((c) => !c.parent_id).length;
-
   const stats = [
     { label: "Total Categories", value: totalCategories },
     { label: "Main Categories", value: mainCategories },
   ];
 
-  if (loading) {
+  // Loading state
+  if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color={colors.accent} />
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text style={{ color: colors.error || "red", textAlign: "center" }}>
-          Error: {error}
+        <Text style={{ marginTop: 10, color: colors.textSecondary }}>
+          Loading{" "}
+          {totalCategories > 0 ? `${totalCategories} categories` : "categories"}
+          ...
         </Text>
       </View>
     );
   }
 
-  const categoryTree = buildCategoryTree(categories);
+  // Error state
+  if (error) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text
+          style={{
+            color: colors.error || "red",
+            textAlign: "center",
+            marginBottom: 10,
+          }}
+        >
+          Error: {error.message}
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1 }}>
       <StatsBar stats={stats} />
+      {isFetching && (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            zIndex: 1,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            borderRadius: 4,
+            padding: 4,
+            margin: 8,
+          }}
+        >
+          <ActivityIndicator size="small" color={colors.accent} />
+        </View>
+      )}
       <ScrollView style={{ flex: 1 }}>
         <CategoryTree
           categories={categoryTree}

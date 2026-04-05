@@ -1,15 +1,17 @@
 export interface Receipt {
   id: string;
+  user_id: string;
   merchant_id: string;
+  location_id?: string | null;
   date: string;
-  time?: string;
+  subtotal_amount?: number | null;
+  total_amount: number;
+  tax_amount?: number | null;
+  items_count?: number | null;
   currency: string;
-  total: number;
-  thumbnail?: string;
-  file_type?: string;
-  created_at?: string;
-  updated_at?: string;
-  items?: ReceiptItem[];
+  payment_type?: string | null;
+  image_path?: string | null;
+  created_at: string;
 }
 
 // types/receipt.ts
@@ -74,11 +76,16 @@ export interface QueryParams {
 export interface ReceiptItem {
   id: string;
   receipt_id: string;
-  name: string;
+  product_id?: string | null;
+  category_id?: string | null;
+  raw_name?: string | null;
   quantity: number;
-  unit: string;
-  price: number;
-  created_at?: string;
+  unit_price: number;
+  total_price: number;
+  unit_of_measure?: string | null;
+  normalized_quantity?: number | null;
+  normalized_unit?: string | null;
+  discount_amount?: number | null;
 }
 
 export interface ReceiptFile {

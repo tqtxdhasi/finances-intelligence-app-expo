@@ -1,4 +1,4 @@
-import CategoryModal from "@/components/data/CategoryModal";
+import CategoryModal from "@/components/data/categories/CategoryModal";
 import { useProducts } from "@/hooks/useProducts";
 import { useTheme } from "@/utils/theme";
 import { Ionicons } from "@expo/vector-icons";

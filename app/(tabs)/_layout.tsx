@@ -10,7 +10,7 @@ export default function TabLayout() {
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           const getIconName = () => {
-            if (route.name === "receipts") {
+            if (route.name === "index") {
               return focused ? "receipt" : "receipt-outline";
             }
             if (route.name === "add") {
@@ -43,7 +43,7 @@ export default function TabLayout() {
         headerShown: false,
       })}
     >
-      <Tabs.Screen name="receipts" options={{ title: "Receipts" }} />
+      <Tabs.Screen name="index" options={{ title: "Receipts" }} />
       <Tabs.Screen name="add" options={{ title: "Add" }} />
       <Tabs.Screen name="analytics" options={{ title: "Analytics" }} />
       <Tabs.Screen name="data" options={{ title: "Data" }} />

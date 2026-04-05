@@ -1,31 +1,30 @@
 import { Product } from "@/types/data";
 import { useTheme } from "@/utils/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface ProductsListProductProps {
-  item: Product;
-  onEdit: (item: Product) => void;
+  product: Product;
 }
 
 export const ProductsListProduct: React.FC<ProductsListProductProps> = ({
-  item,
-  onEdit,
+  product,
 }) => {
   const { colors } = useTheme();
 
-  const handleDeleteProduct = (item: Product) => {
+  const handleDeleteProduct = (product: Product) => {
     Alert.alert(
       "Delete Product",
-      `Are you sure you want to delete "${item.name}"? This will affect ${item.occurrenceCount} receipts.`,
+      `Are you sure you want to delete "${product.name}"? This will affect ${product.occurrenceCount} receipts.`,
       [
         { text: "Cancel", style: "cancel" },
         {
           text: "Delete",
           style: "destructive",
           onPress: () => {
-            console.log("Delete item:", item.id);
+            console.log("Delete item:", product.id);
             Alert.alert("Success", "Product deleted");
           },
         },
@@ -38,24 +37,24 @@ export const ProductsListProduct: React.FC<ProductsListProductProps> = ({
       <View style={styles.listProductContent}>
         <View style={styles.itemHeader}>
           <Text style={[styles.listProductTitle, { color: colors.text }]}>
-            {item.name}
+            {product.name}
           </Text>
           <Text style={[styles.normalizedName, { color: colors.accent }]}>
-            {item.normalizedName}
+            {product.normalizedName}
           </Text>
         </View>
         <View style={styles.listProductStats}>
           <Text
             style={[styles.listProductStat, { color: colors.textSecondary }]}
           >
-            {item.occurrenceCount} purchases
+            {product.occurrenceCount} purchases
           </Text>
           <Text
             style={[styles.listProductStat, { color: colors.textSecondary }]}
           >
-            ${item.totalSpent.toFixed(2)}
+            ${product.totalSpent.toFixed(2)}
           </Text>
-          {item.category && (
+          {product.category && (
             <View
               style={[
                 styles.categoryTag,
@@ -68,7 +67,7 @@ export const ProductsListProduct: React.FC<ProductsListProductProps> = ({
                   { color: colors.textSecondary },
                 ]}
               >
-                {item.category}
+                {product.category}
               </Text>
             </View>
           )}
@@ -76,7 +75,7 @@ export const ProductsListProduct: React.FC<ProductsListProductProps> = ({
       </View>
       <View style={styles.listProductActions}>
         <TouchableOpacity
-          onPress={() => onEdit(item)}
+          onPress={() => router.push(`/product/edit/${product.id}`)}
           style={styles.actionButton}
         >
           <Ionicons
@@ -86,7 +85,7 @@ export const ProductsListProduct: React.FC<ProductsListProductProps> = ({
           />
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => handleDeleteProduct(item)}
+          onPress={() => handleDeleteProduct(product)}
           style={styles.actionButton}
         >
           <Ionicons

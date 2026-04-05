@@ -9,6 +9,7 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import OnboardingScreen from "./onboarding";
+import QueryProvider from "./providers/QueryProvider";
 
 function LayoutContent() {
   const insets = useSafeAreaInsets();
@@ -59,7 +60,10 @@ function LayoutContent() {
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <LayoutContent />
+      {/* Wrap LayoutContent with QueryProvider */}
+      <QueryProvider>
+        <LayoutContent />
+      </QueryProvider>
     </SafeAreaProvider>
   );
 }

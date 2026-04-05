@@ -1,5 +1,6 @@
 // app/screens/AddScreen.tsx
 import FilePreviewModal from "@/components/add/FilePreviewModal";
+import ReceiptItemsSection from "@/components/add/ReceiptItemsSection";
 import { useCreateReceipt } from "@/hooks/receipt/createReceipt";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { ReceiptItem } from "@/types/data";

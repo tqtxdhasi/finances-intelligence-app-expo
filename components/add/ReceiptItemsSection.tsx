@@ -1,24 +1,24 @@
 // components/add/ItemsSection.tsx
-import { Item } from "@/types/receipt";
+import { ReceiptItem } from "@/types/receipt";
+import { useTheme } from "@/utils/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import ItemCard from "./ReceiptItemCard";
-import { useTheme } from "@/utils/theme";
 
 interface Props {
-  items: Item[];
-  onAddItem: () => void;
-  onUpdateItem: (id: string, updates: Partial<Item>) => void;
-  onRemoveItem: (id: string) => void;
+  receiptItems: ReceiptItem[];
+  onAddReceiptItem: () => void;
+  onUpdateReceiptItem: (id: string, updates: Partial<ReceiptItem>) => void;
+  onRemoveReceiptItem: (id: string) => void;
   originalCurrency: string;
 }
 
-export default function ItemsSection({
-  items,
-  onAddItem,
-  onUpdateItem,
-  onRemoveItem,
+export default function ReceiptItemsSection({
+  receiptItems,
+  onAddReceiptItem,
+  onUpdateReceiptItem,
+  onRemoveReceiptItem,
   originalCurrency,
 }: Props) {
   const { colors, styles: themeStyles } = useTheme();
@@ -50,22 +50,22 @@ export default function ItemsSection({
         <Text style={[themeStyles.title, { fontSize: 18 }]}>Items *</Text>
         <TouchableOpacity
           style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
-          onPress={onAddItem}
+          onPress={onAddReceiptItem}
         >
           <Ionicons name="add-circle" size={24} color={colors.accent} />
           <Text style={{ color: colors.accent, fontSize: 14 }}>Add Item</Text>
         </TouchableOpacity>
       </View>
 
-      {items.map((item) => (
+      {receiptItems.map((receiptItem: ReceiptItem) => (
         <ItemCard
-          key={item.id}
-          item={item}
-          onUpdate={(updates) => onUpdateItem(item.id, updates)}
-          onRemove={() => onRemoveItem(item.id)}
+          key={receiptItem.id}
+          item={receiptItem}
+          onUpdate={(updates) => onUpdateReceiptItem(receiptItem.id, updates)}
+          onRemove={() => onRemoveReceiptItem(receiptItem.id)}
           currency={originalCurrency}
-          isExpanded={expandedItemId === item.id}
-          onToggleExpand={() => toggleExpand(item.id)}
+          isExpanded={expandedItemId === receiptItem.id}
+          onToggleExpand={() => toggleExpand(receiptItem.id)}
         />
       ))}
     </View>

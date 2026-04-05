@@ -5,11 +5,7 @@ import { ActivityIndicator, FlatList, View } from "react-native";
 import { StatsBar } from "../StatsBar";
 import { ProductsListProduct } from "./ProductsListProduct";
 
-interface ProductsTabProps {
-  onEditProduct: (item: Product) => void;
-}
-
-export const ProductsTab: React.FC<ProductsTabProps> = ({ onEditProduct }) => {
+export const ProductsTab = () => {
   const { fetchProducts, loading } = useProducts();
   const [products, setProducts] = useState<Product[]>([]);
 
@@ -58,12 +54,9 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({ onEditProduct }) => {
       <StatsBar stats={stats} />
       <FlatList
         data={products}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <ProductsListProduct
-            product={convertToProductType(item)}
-            onEdit={onEditProduct}
-          />
+        keyExtractor={(product) => product.id}
+        renderItem={(product) => (
+          <ProductsListProduct product={convertToProductType(product)} />
         )}
         onRefresh={loadProducts}
         refreshing={loading}
