@@ -78,9 +78,6 @@ export interface ProductAlias {
   id: string;
   product_id: string;
   raw_receipt_name: string;
-  usage_count: number;
-  last_used_at: string;
-  user_id?: string | null;
 }
 
 // ========== DTOs (Data Transfer Objects) ==========

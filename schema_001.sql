@@ -142,7 +142,6 @@ CREATE TABLE IF NOT EXISTS receipt_items (
 CREATE INDEX IF NOT EXISTS idx_receipt_date ON receipts(date);
 CREATE INDEX IF NOT EXISTS idx_item_product ON receipt_items(product_id);
 CREATE INDEX IF NOT EXISTS idx_alias_lookup ON product_aliases(raw_receipt_name);
-CREATE INDEX IF NOT EXISTS idx_alias_usage ON product_aliases(usage_count DESC);
 CREATE INDEX IF NOT EXISTS idx_category_hierarchy ON categories(parent_id);
 CREATE INDEX IF NOT EXISTS idx_user_merchant_loyalty ON user_merchants(user_id, visit_count DESC);
 CREATE INDEX IF NOT EXISTS idx_merchant_constraints ON merchant_category_constraints(merchant_id);

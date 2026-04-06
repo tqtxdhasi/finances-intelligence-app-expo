@@ -1,15 +1,13 @@
 // components/merchants/MerchantsTab.tsx
-import {
-  getAllMerchantsWithStats,
-  MerchantWithStats,
-} from "@/hooks/merchant/getAllMerchantsWithStats";
+import { useMerchants } from "@/hooks/merchant/getAllMerchantsWithStats";
 import { useTheme } from "@/utils/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -17,12 +15,6 @@ import {
 } from "react-native";
 import { StatsBar } from "../StatsBar";
 import { MerchantsListItem } from "./MerchantsListItem";
-
-// ========== DEBUG FLAGS – toggle these to force specific UI states ==========
-const FORCE_LOADING = false; // Set to true to see loading skeleton
-const FORCE_EMPTY = false; // Set to true to see empty state (no merchants)
-const FORCE_ERROR = false; // Set to true to see error state
-// ============================================================================
 
 // Skeleton loader component for better loading state
 const LoadingSkeleton = () => {
@@ -66,7 +58,7 @@ const LoadingSkeleton = () => {
   );
 };
 
-// Empty state component with only an "Add Merchant" button (no refresh button)
+// Empty state component
 const EmptyState = () => {
   const { colors } = useTheme();
   const router = useRouter();
@@ -94,64 +86,31 @@ const EmptyState = () => {
   );
 };
 
-export const MerchantsTab = ({}) => {
-  const [merchants, setMerchants] = useState<MerchantWithStats[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+export const MerchantsTab = () => {
   const { colors } = useTheme();
+  const router = useRouter();
 
-  const fetchMerchants = useCallback(async () => {
-    try {
-      setError(null);
+  // Use React Query hook
+  const {
+    data: merchants = [],
+    isLoading,
+    error,
+    isFetching,
+    refetch,
+  } = useMerchants();
 
-      // DEBUG: Force loading state (skip actual fetch)
-      if (FORCE_LOADING) {
-        setLoading(true);
-        setMerchants([]);
-        setRefreshing(false);
-        return;
-      }
-
-      // DEBUG: Force error state
-      if (FORCE_ERROR) {
-        throw new Error("Forced error for debugging");
-      }
-
-      // DEBUG: Force empty state (skip fetch, just set empty merchants)
-      if (FORCE_EMPTY) {
-        setMerchants([]);
-        setLoading(false);
-        setRefreshing(false);
-        return;
-      }
-
-      // Normal fetch
-      const data = await getAllMerchantsWithStats();
-      setMerchants(data);
-    } catch (err) {
-      console.error("Failed to fetch merchants:", err);
-      setError("Failed to load merchants. Please try again.");
-    } finally {
-      // Only reset loading if we are not forcing a persistent loading state
-      if (!FORCE_LOADING) {
-        setLoading(false);
-      }
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchMerchants();
-  }, [fetchMerchants]);
-
+  // Pull-to-refresh handler
   const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchMerchants();
-  }, [fetchMerchants]);
+    refetch();
+  }, [refetch]);
 
-  // Show skeleton loader only during initial load (respecting FORCE_LOADING)
-  if ((loading && !refreshing) || FORCE_LOADING) {
+  // Handle add merchant navigation
+  const handleAddMerchant = useCallback(() => {
+    router.push("/merchant/create");
+  }, [router]);
+
+  // Show skeleton loader during initial load
+  if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.accent} />
@@ -163,17 +122,17 @@ export const MerchantsTab = ({}) => {
     );
   }
 
-  // Error state (full screen, no list) – also triggered by FORCE_ERROR
-  if ((error && merchants.length === 0) || FORCE_ERROR) {
+  // Error state
+  if (error) {
     return (
       <View style={styles.errorContainer}>
         <Ionicons name="alert-circle-outline" size={60} color={colors.error} />
         <Text style={[styles.errorText, { color: colors.text }]}>
-          {error || "Something went wrong. Please try again."}
+          {error.message || "Failed to load merchants. Please try again."}
         </Text>
         <TouchableOpacity
           style={[styles.retryButton, { backgroundColor: colors.accent }]}
-          onPress={fetchMerchants}
+          onPress={() => refetch()}
         >
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
@@ -181,6 +140,7 @@ export const MerchantsTab = ({}) => {
     );
   }
 
+  // Calculate stats
   const totalReceipts = merchants.reduce((sum, m) => sum + m.receiptCount, 0);
   const totalLocations = merchants.reduce(
     (sum, m) => sum + m.locations.length,
@@ -199,13 +159,24 @@ export const MerchantsTab = ({}) => {
         data={merchants}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <MerchantsListItem merchant={item} onDeleteSuccess={fetchMerchants} />
+          <MerchantsListItem
+            merchant={item}
+            onDeleteSuccess={() => refetch()}
+          />
         )}
         ListEmptyComponent={
-          !loading && merchants.length === 0 ? <EmptyState /> : null
+          !isLoading && merchants.length === 0 ? <EmptyState /> : null
         }
-        refreshing={refreshing}
-        onRefresh={onRefresh}
+        refreshControl={
+          <RefreshControl
+            refreshing={isFetching && !isLoading}
+            onRefresh={onRefresh}
+            colors={[colors.accent]}
+            tintColor={colors.accent}
+            title="Pull to refresh"
+            titleColor={colors.textSecondary}
+          />
+        }
         contentContainerStyle={[
           styles.listContent,
           merchants.length === 0 && { flex: 1 },

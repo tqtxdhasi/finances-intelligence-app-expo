@@ -74,15 +74,12 @@ export const useProducts = () => {
           if (rawName.trim()) {
             const aliasId = generateId();
             await executeQuery(
-              `INSERT INTO product_aliases (id, product_id, raw_receipt_name, usage_count, last_used_at, user_id)
-               VALUES (?, ?, ?, ?, ?, ?)`,
+              `INSERT INTO product_aliases (id, product_id, raw_receipt_name)
+               VALUES (?, ?, ?)`,
               [
                 aliasId,
                 productId,
                 rawName.trim(),
-                1, // initial usage count
-                now,
-                userId, // track who created this alias
               ],
             );
           }

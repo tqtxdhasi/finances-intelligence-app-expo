@@ -1,10 +1,11 @@
+// components/data/categories/CategoryTree.tsx
+import { CategoryTreeNode } from "@/types/data";
 import React from "react";
 import { View } from "react-native";
 import { CategoryListItem } from "./CategoryListItem";
-import { Category } from "@/types/data";
 
 interface CategoryTreeProps {
-  categories: Category[];
+  categories: CategoryTreeNode[]; // Changed from Category[] to CategoryTreeNode[]
   expandedIds: Set<string>;
   onToggle: (id: string) => void;
   level?: number;
@@ -32,7 +33,7 @@ export const CategoryTree: React.FC<CategoryTreeProps> = ({
             />
             {isExpanded && hasSubcategories && (
               <CategoryTree
-                categories={category.subcategories as Category[]}
+                categories={category.subcategories} // Now this is properly typed as CategoryTreeNode[]
                 expandedIds={expandedIds}
                 onToggle={onToggle}
                 level={level + 1}

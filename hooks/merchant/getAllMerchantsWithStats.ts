@@ -1,7 +1,39 @@
 // lib/db/merchants/getAllMerchantsWithStats.ts
 import { Location, Merchant } from "@/types/data";
 import { executeQuery } from "../executeQuery";
+// hooks/merchant/useMerchants.ts
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+export const MERCHANTS_QUERY_KEY = ["merchants"] as const;
+
+export const useMerchants = () => {
+  return useQuery({
+    queryKey: MERCHANTS_QUERY_KEY,
+    queryFn: getAllMerchantsWithStats,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+};
+
+// Helper to invalidate merchants cache (useful after mutations)
+export const useInvalidateMerchants = () => {
+  const queryClient = useQueryClient();
+
+  return () => {
+    queryClient.invalidateQueries({ queryKey: MERCHANTS_QUERY_KEY });
+  };
+};
+
+// Helper to update cache manually (optimistic updates)
+export const useUpdateMerchantsCache = () => {
+  const queryClient = useQueryClient();
+
+  return (
+    updater: (old: MerchantWithStats[] | undefined) => MerchantWithStats[],
+  ) => {
+    queryClient.setQueryData(MERCHANTS_QUERY_KEY, updater);
+  };
+};
 export interface MerchantWithStats extends Merchant {
   receiptCount: number;
   totalSpent: number;

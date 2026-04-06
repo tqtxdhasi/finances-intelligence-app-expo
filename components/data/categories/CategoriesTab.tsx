@@ -1,11 +1,18 @@
 // components/CategoriesTab.tsx
+import { useCategories } from "@/hooks/category/getAllCategories";
 import { Category, CategoryTreeNode } from "@/types/data";
 import { useTheme } from "@/utils/theme";
-import React, { useMemo, useState } from "react";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { StatsBar } from "../StatsBar";
 import { CategoryTree } from "./CategoryTree";
-import { useCategories } from "@/hooks/category/getAllCategories";
 
 export const CategoriesTab = () => {
   const { colors } = useTheme();
@@ -18,12 +25,17 @@ export const CategoriesTab = () => {
     data: categories = [],
     isLoading,
     error,
-    isFetching, // Optional: shows when background refetching
-    refetch, // Manual refetch if needed
+    isFetching,
+    refetch, // Manual refetch function
   } = useCategories({
     sortBy: "name",
     sortOrder: "ASC",
   });
+
+  // Pull-to-refresh handler
+  const onRefresh = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   // Build category tree (memoized)
   const buildCategoryTree = (
@@ -70,15 +82,13 @@ export const CategoriesTab = () => {
     { label: "Main Categories", value: mainCategories },
   ];
 
-  // Loading state
+  // Loading state (only on initial load)
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color={colors.accent} />
         <Text style={{ marginTop: 10, color: colors.textSecondary }}>
-          Loading{" "}
-          {totalCategories > 0 ? `${totalCategories} categories` : "categories"}
-          ...
+          Loading categories...
         </Text>
       </View>
     );
@@ -97,6 +107,7 @@ export const CategoriesTab = () => {
         >
           Error: {error.message}
         </Text>
+        <TouchableOpacity onPress={onRefresh}>Retry</TouchableOpacity>
       </View>
     );
   }
@@ -104,23 +115,19 @@ export const CategoriesTab = () => {
   return (
     <View style={{ flex: 1 }}>
       <StatsBar stats={stats} />
-      {isFetching && (
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            zIndex: 1,
-            backgroundColor: "rgba(0,0,0,0.5)",
-            borderRadius: 4,
-            padding: 4,
-            margin: 8,
-          }}
-        >
-          <ActivityIndicator size="small" color={colors.accent} />
-        </View>
-      )}
-      <ScrollView style={{ flex: 1 }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={isFetching && !isLoading} // Don't show if it's initial load
+            onRefresh={onRefresh}
+            colors={[colors.accent]} // Android
+            tintColor={colors.accent} // iOS
+            title="Pull to refresh" // iOS
+            titleColor={colors.textSecondary} // iOS
+          />
+        }
+      >
         <CategoryTree
           categories={categoryTree}
           expandedIds={expandedCategories}
