@@ -10,7 +10,6 @@ import {
 } from "@/types/receipt";
 import { deleteReceiptById } from "./deleteReceiptById";
 import { getAllReceipts } from "./getAllReceipts";
-import { updateReceiptById } from "./updateReceiptById";
 
 // --- Types ---
 type State = {

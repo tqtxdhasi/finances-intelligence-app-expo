@@ -1,102 +1,136 @@
-// lib/db/product/updateProductById.ts
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+// services/updateReceiptById.ts
+import { Receipt, UpdateReceiptDTO } from "@/types/receipt";
+import { generateId } from "../category/createCategory";
 import { executeQuery } from "../executeQuery";
-import { PRODUCTS_QUERY_KEY } from "../product/createProduct";
-import { useUser } from "../useUser";
+import { getReceiptById } from "./getReceiptById";
 
-// ----------------------------------------------------------------------
-// Types
-// ----------------------------------------------------------------------
-export interface UpdateProductData {
-  name?: string;
-  category_id?: string | null;
-  default_unit?: string | null;
-  aliases?: string[]; // full list of aliases (replaces existing)
-}
-
-// ----------------------------------------------------------------------
-// Low‑level service function (handles both product fields and aliases)
-// ----------------------------------------------------------------------
-export const updateProductById = async (
+/**
+ * Update an existing receipt and its items
+ * Pass only the fields you want to update.
+ * For items: items with an id are updated, items without id are inserted,
+ * items present in DB but not in the array are deleted.
+ */
+export const updateReceiptById = async (
   id: string,
-  updates: UpdateProductData,
-): Promise<void> => {
-  // 1. Update product fields
-  const fields: string[] = [];
+  data: UpdateReceiptDTO,
+): Promise<Receipt> => {
+  // 1. Update receipt main fields
+  const updates: string[] = [];
   const values: any[] = [];
 
-  if (updates.name !== undefined) {
-    fields.push("name = ?");
-    values.push(updates.name);
-  }
-  if (updates.category_id !== undefined) {
-    fields.push("category_id = ?");
-    values.push(updates.category_id);
-  }
-  if (updates.default_unit !== undefined) {
-    fields.push("default_unit = ?");
-    values.push(updates.default_unit);
-  }
-
-  if (fields.length > 0) {
-    values.push(id);
-    await executeQuery(
-      `UPDATE products SET ${fields.join(", ")} WHERE id = ?`,
-      values,
-    );
-  }
-
-  // 2. Handle aliases (replace entire set)
-  if (updates.aliases !== undefined) {
-    // Delete all existing aliases for this product
-    await executeQuery("DELETE FROM product_aliases WHERE product_id = ?", [
-      id,
-    ]);
-
-    // Insert new aliases
-    if (updates.aliases.length > 0) {
-      const aliasValues: any[] = [];
-      const placeholders: string[] = [];
-
-      for (const rawName of updates.aliases) {
-        const trimmed = rawName.trim();
-        if (!trimmed) continue;
-        const aliasId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        aliasValues.push(aliasId, id, trimmed);
-        placeholders.push("(?, ?, ?)");
-      }
-
-      if (placeholders.length) {
-        await executeQuery(
-          `INSERT INTO product_aliases (id, product_id, raw_receipt_name)
-           VALUES ${placeholders.join(", ")}`,
-          aliasValues,
-        );
-      }
+  const fields = ["merchant", "date", "time", "currency", "total"] as const;
+  for (const field of fields) {
+    if (data[field] !== undefined) {
+      updates.push(`${field} = ?`);
+      values.push(data[field]);
     }
   }
-};
 
-// ----------------------------------------------------------------------
-// React Query hook
-// ----------------------------------------------------------------------
-export const useUpdateProduct = () => {
-  const queryClient = useQueryClient();
-  const { userId } = useUser();
+  if (updates.length > 0) {
+    const updateQuery = `
+      UPDATE receipts 
+      SET ${updates.join(", ")}, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `;
+    await executeQuery(updateQuery, [...values, id]);
+  }
 
-  return useMutation({
-    mutationFn: async ({
-      id,
-      updates,
-    }: {
-      id: string;
-      updates: UpdateProductData;
-    }) => {
-      if (!userId) throw new Error("User not authenticated");
-      await updateProductById(id, updates);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
-    },
-  });
+  // 2. Update items if provided
+  if (data.items !== undefined) {
+    // Fetch current items from DB
+    const currentItems = await executeQuery(
+      "SELECT id FROM receipt_items WHERE receipt_id = ?",
+      [id],
+    );
+    const currentIds = new Set(currentItems.map((item: any) => item.id));
+    const newItems = data.items;
+
+    // Separate new items into create, update, delete
+    const toDelete: string[] = [];
+    const toUpdate: any[] = [];
+    const toCreate: any[] = [];
+
+    // Build a map of new items by id (if they have one)
+    const newItemsMap = new Map();
+    for (const item of newItems) {
+      if (item.id) {
+        newItemsMap.set(item.id, item);
+      } else {
+        // Items without id are new
+        toCreate.push(item);
+      }
+    }
+
+    // Determine which existing items are missing in the new list (to delete)
+    for (const currentId of currentIds) {
+      if (!newItemsMap.has(currentId)) {
+        toDelete.push(currentId);
+      }
+    }
+
+    // Items with id that exist in both sets need to be updated
+    for (const [itemId, item] of newItemsMap.entries()) {
+      if (currentIds.has(itemId)) {
+        toUpdate.push({ ...item, id: itemId });
+      } else {
+        // id provided but not found – treat as new (generate new id)
+        toCreate.push({ ...item, id: undefined });
+      }
+    }
+
+    // 3. Execute delete operations
+    if (toDelete.length > 0) {
+      const deleteQuery = `DELETE FROM receipt_items WHERE receipt_id = ? AND id IN (${toDelete.map(() => "?").join(",")})`;
+      await executeQuery(deleteQuery, [id, ...toDelete]);
+    }
+
+    // 4. Execute update operations
+    const now = new Date().toISOString();
+    for (const item of toUpdate) {
+      const updateItemQuery = `
+        UPDATE receipt_items 
+        SET name = ?, quantity = ?, unit = ?, price = ?, created_at = ?
+        WHERE id = ? AND receipt_id = ?
+      `;
+      await executeQuery(updateItemQuery, [
+        item.name,
+        item.quantity,
+        item.unit || "pcs",
+        item.price,
+        now,
+        item.id,
+        id,
+      ]);
+    }
+
+    // 5. Execute insert operations
+    if (toCreate.length > 0) {
+      const insertValues: any[] = [];
+      const placeholders: string[] = [];
+
+      for (const item of toCreate) {
+        const itemId = generateId();
+        insertValues.push(
+          itemId,
+          id,
+          item.name,
+          item.quantity,
+          item.unit || "pcs",
+          item.price,
+          now,
+        );
+        placeholders.push("(?, ?, ?, ?, ?, ?, ?)");
+      }
+
+      const insertQuery = `
+        INSERT INTO receipt_items 
+        (id, receipt_id, name, quantity, unit, price, created_at)
+        VALUES ${placeholders.join(", ")}
+      `;
+      await executeQuery(insertQuery, insertValues);
+    }
+  }
+
+  // Return the updated receipt
+  return getReceiptById(id) as Promise<Receipt>;
 };
