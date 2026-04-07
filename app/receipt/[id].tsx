@@ -3,7 +3,7 @@ import { DeleteButton } from "@/components/receipt/DeleteButton";
 import { ItemsSection } from "@/components/receipt/ItemsSection";
 import { ReceiptDetailHeader } from "@/components/receipt/ReceiptDetailHeader";
 import { ReceiptImage } from "@/components/receipt/ReceiptImage";
-import { useReceiptDetail } from "@/hooks/useReceiptDetail";
+import { useReceiptDetail } from "@/hooks/receipt/useReceiptDetail";
 import { useTheme } from "@/utils/theme";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";

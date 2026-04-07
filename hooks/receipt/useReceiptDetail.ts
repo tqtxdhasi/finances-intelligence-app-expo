@@ -1,9 +1,9 @@
 import { Receipt, ReceiptItem, UpdateReceiptDTO } from "@/types/receipt";
 import { useEffect, useState } from "react";
 import { Alert } from "react-native";
-import { deleteReceiptById } from "./receipt/deleteReceiptById";
-import { getReceiptById } from "./receipt/getReceiptById";
-import { updateReceiptById } from "./receipt/updateReceiptById";
+import { deleteReceiptById } from "./deleteReceiptById";
+import { getReceiptById } from "./getReceiptById";
+import { updateReceiptById } from "./updateReceiptById";
 
 interface EditableItem {
   id: string;

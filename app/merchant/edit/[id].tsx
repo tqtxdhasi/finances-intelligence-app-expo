@@ -1,5 +1,5 @@
 import { getMerchantById } from "@/hooks/merchant/getMerchantById";
-import { updateMerchant } from "@/hooks/merchant/updateMerchant";
+import { updateMerchantById } from "@/hooks/merchant/updateMerchantById";
 import { Location, Merchant } from "@/types/data";
 import { useTheme } from "@/utils/theme";
 import { Ionicons } from "@expo/vector-icons";
@@ -56,7 +56,7 @@ export default function EditMerchantScreen() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateMerchant(id, {
+      await updateMerchantById(id, {
         name: editingMerchant.name,
         alternative_names: editingMerchant.alternative_names,
         domain: editingMerchant.domain,

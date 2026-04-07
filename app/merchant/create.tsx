@@ -379,9 +379,9 @@ export default function MerchantFormScreen() {
       };
 
       if (params.id) {
-        // Make sure updateMerchant is imported/defined
-        // await updateMerchant(params.id, merchantData);
-        console.warn("updateMerchant not implemented yet");
+        // Make sure updateMerchantById is imported/defined
+        // await updateMerchantById(params.id, merchantData);
+        console.warn("updateMerchantById not implemented yet");
       } else {
         await createMerchant(merchantData);
       }

@@ -113,17 +113,5 @@ export const useMerchantsD1 = () => {
     fetchMerchants();
   }, []);
 
-  const deleteMerchant = async (merchantId: string) => {
-    try {
-      // Due to foreign key constraints with ON DELETE CASCADE, deleting the merchant
-      // will automatically delete related user_merchants, merchant_locations, and receipts.
-      await executeQuery("DELETE FROM merchants WHERE id = ?", [merchantId]);
-      await fetchMerchants(); // refresh list
-    } catch (err) {
-      console.error("Failed to delete merchant:", err);
-      throw err;
-    }
-  };
-
-  return { merchants, loading, error, refetch: fetchMerchants, deleteMerchant };
+  return { merchants, loading, error, refetch: fetchMerchants };
 };

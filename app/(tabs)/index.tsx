@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 
-import { useGroupedReceipts } from "@/hooks/useGroupedReceipts";
+import { useGroupedReceipts } from "@/hooks/receipt/useGroupedReceipts";
 import { useTheme } from "@/utils/theme";
 import Header from "../../components/Header";
 import ReceiptItem from "../../components/ReceiptItem";

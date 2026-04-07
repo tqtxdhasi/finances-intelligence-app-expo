@@ -1,5 +1,5 @@
 import CategoryModal from "@/components/data/categories/CategoryModal";
-import { useProducts } from "@/hooks/useProducts";
+import { useCreateProduct } from "@/hooks/product/useProducts";
 import { useTheme } from "@/utils/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -16,7 +16,7 @@ import {
 
 export default function CreateItemScreen() {
   const { colors, styles: themeStyles } = useTheme();
-  const { createProduct, loading } = useProducts();
+  const { mutate: createProduct, isPending: loading } = useCreateProduct();
 
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState<string | null>(null);
@@ -48,19 +48,23 @@ export default function CreateItemScreen() {
       return;
     }
 
-    try {
-      await createProduct({
+    createProduct(
+      {
         name: name.trim(),
         categoryId: categoryId || undefined,
         aliases: aliases.length > 0 ? aliases : undefined,
-      });
-
-      Alert.alert("Success", "Product created successfully");
-      router.back();
-    } catch (error) {
-      Alert.alert("Error", "Failed to create product");
-      console.error(error);
-    }
+      },
+      {
+        onSuccess: () => {
+          Alert.alert("Success", "Product created successfully");
+          router.back();
+        },
+        onError: (error) => {
+          Alert.alert("Error", "Failed to create product");
+          console.error(error);
+        },
+      },
+    );
   };
 
   return (

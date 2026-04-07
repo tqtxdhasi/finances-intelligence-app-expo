@@ -1,9 +1,19 @@
+// components/data/ProductsListProduct.tsx
+import { useDeleteProduct } from "@/hooks/product/useProducts"; // adjust import path
+import { useSettingsStore } from "@/stores/settingsStore";
 import { Product } from "@/types/data";
 import { useTheme } from "@/utils/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 interface ProductsListProductProps {
   product: Product;
@@ -13,8 +23,10 @@ export const ProductsListProduct: React.FC<ProductsListProductProps> = ({
   product,
 }) => {
   const { colors } = useTheme();
+  const { currency: userCurrency } = useSettingsStore();
+  const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct();
 
-  const handleDeleteProduct = (product: Product) => {
+  const handleDeleteProduct = () => {
     Alert.alert(
       "Delete Product",
       `Are you sure you want to delete "${product.name}"? This will affect ${product.occurrenceCount} receipts.`,
@@ -24,8 +36,15 @@ export const ProductsListProduct: React.FC<ProductsListProductProps> = ({
           text: "Delete",
           style: "destructive",
           onPress: () => {
-            console.log("Delete item:", product.id);
-            Alert.alert("Success", "Product deleted");
+            deleteProduct(product.id, {
+              onSuccess: () => {
+                Alert.alert("Success", "Product deleted");
+              },
+              onError: (error) => {
+                Alert.alert("Error", "Failed to delete product");
+                console.error(error);
+              },
+            });
           },
         },
       ],
@@ -52,7 +71,7 @@ export const ProductsListProduct: React.FC<ProductsListProductProps> = ({
           <Text
             style={[styles.listProductStat, { color: colors.textSecondary }]}
           >
-            ${product.totalSpent.toFixed(2)}
+            {userCurrency} {product.totalSpent.toFixed(2)}
           </Text>
           {product.category && (
             <View
@@ -77,6 +96,7 @@ export const ProductsListProduct: React.FC<ProductsListProductProps> = ({
         <TouchableOpacity
           onPress={() => router.push(`/product/edit/${product.id}`)}
           style={styles.actionButton}
+          disabled={isDeleting}
         >
           <Ionicons
             name="create-outline"
@@ -85,20 +105,24 @@ export const ProductsListProduct: React.FC<ProductsListProductProps> = ({
           />
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => handleDeleteProduct(product)}
+          onPress={handleDeleteProduct}
           style={styles.actionButton}
+          disabled={isDeleting}
         >
-          <Ionicons
-            name="trash-outline"
-            size={20}
-            color={colors.error || "#ff4444"}
-          />
+          {isDeleting ? (
+            <ActivityIndicator size="small" color={colors.error || "#ff4444"} />
+          ) : (
+            <Ionicons
+              name="trash-outline"
+              size={20}
+              color={colors.error || "#ff4444"}
+            />
+          )}
         </TouchableOpacity>
       </View>
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   listProduct: {
     borderRadius: 12,

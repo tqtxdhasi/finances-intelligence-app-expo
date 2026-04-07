@@ -16,16 +16,6 @@ export const DeleteButton: React.FC<DeleteButtonProps> = ({
   onDeleteSuccess,
   errorColor,
 }) => {
-  const handleDeleteMerchant = async () => {
-    try {
-      await deleteMerchantById(merchant.id);
-      onDeleteSuccess(); // Refresh the list
-    } catch (err) {
-      console.error("Delete failed", err);
-      Alert.alert("Error", "Failed to delete merchant.");
-    }
-  };
-
   const handleDeletePress = () => {
     Alert.alert(
       "Delete Merchant",
@@ -35,7 +25,15 @@ export const DeleteButton: React.FC<DeleteButtonProps> = ({
         {
           text: "Delete",
           style: "destructive",
-          onPress: handleDeleteMerchant,
+          onPress: async () => {
+            try {
+              await deleteMerchantById(merchant.id);
+              onDeleteSuccess(); // Refresh the list
+            } catch (err) {
+              console.error("Delete failed", err);
+              Alert.alert("Error", "Failed to delete merchant.");
+            }
+          },
         },
       ],
     );

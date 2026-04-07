@@ -1,23 +1,30 @@
 // components/data/ProductsTab.tsx
-import { Product, useProducts } from "@/hooks/useProducts";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, View } from "react-native";
+import { useProducts } from "@/hooks/product/useProducts";
+import { useSettingsStore } from "@/stores/settingsStore";
+import { Product } from "@/types/data";
+import { useTheme } from "@/utils/theme";
+import React from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  Text,
+  View,
+} from "react-native";
 import { StatsBar } from "../StatsBar";
 import { ProductsListProduct } from "./ProductsListProduct";
 
 export const ProductsTab = () => {
-  const { fetchProducts, loading } = useProducts();
-  const [products, setProducts] = useState<Product[]>([]);
+  const { colors } = useTheme();
+  const {
+    data: products = [],
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useProducts();
+  const { currency: userCurrency } = useSettingsStore();
 
-  useEffect(() => {
-    loadProducts();
-  }, []);
-
-  const loadProducts = async () => {
-    const data = await fetchProducts();
-    setProducts(data);
-  };
-
+  // Compute stats
   const totalPurchases = products.reduce(
     (sum, p) => sum + p.occurrenceCount,
     0,
@@ -29,19 +36,21 @@ export const ProductsTab = () => {
   const stats = [
     { label: "Unique Products", value: products.length },
     { label: "Total Purchases", value: totalPurchases },
-    { label: "Total Spent", value: `$${totalSpent}` },
+    { label: "Total Spent", value: `${userCurrency + " " + totalSpent}` },
   ];
 
-  const convertToProductType = (product: Product): Product => ({
+  // Convert to shape expected by ProductsListProduct
+  const convertToProductType = (product: Product) => ({
     id: product.id,
     name: product.name,
-    normalizedName: product.normalizedName,
+    normalizedName: product.name, // adjust if you have a dedicated field
     occurrenceCount: product.occurrenceCount,
     totalSpent: product.totalSpent,
-    category: product.categoryName,
+    category: product.category,
   });
 
-  if (loading) {
+  // Initial loading state
+  if (isLoading && products.length === 0) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" />
@@ -52,14 +61,39 @@ export const ProductsTab = () => {
   return (
     <View style={{ flex: 1 }}>
       <StatsBar stats={stats} />
+
       <FlatList
         data={products}
         keyExtractor={(product) => product.id}
-        renderItem={(product) => (
-          <ProductsListProduct product={convertToProductType(product)} />
+        renderItem={({ item }) => (
+          <ProductsListProduct product={convertToProductType(item)} />
         )}
-        onRefresh={loadProducts}
-        refreshing={loading}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            colors={[colors.accent]}
+            tintColor={colors.accent}
+          />
+        }
+        ListEmptyComponent={
+          !isLoading && products.length === 0 ? (
+            <View
+              style={{
+                padding: 48,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text
+                style={{ color: colors.textSecondary, textAlign: "center" }}
+              >
+                No products yet.{"\n"}Add your first product by tapping the +
+                button.
+              </Text>
+            </View>
+          ) : null
+        }
       />
     </View>
   );

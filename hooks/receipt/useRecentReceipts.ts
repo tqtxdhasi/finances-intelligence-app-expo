@@ -1,8 +1,8 @@
 // hooks/useRecentReceipts.ts
 import { useCallback, useEffect, useState } from "react";
 import { Alert } from "react-native";
-import { Receipt } from "../types/receipt";
-import { getAllReceipts } from "./receipt/getAllReceipts";
+import { Receipt } from "../../types/receipt";
+import { getAllReceipts } from "./getAllReceipts";
 
 export const useRecentReceipts = (limit: number = 5) => {
   const [receipts, setReceipts] = useState<Receipt[]>([]);

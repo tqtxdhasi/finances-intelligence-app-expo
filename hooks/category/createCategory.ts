@@ -44,8 +44,8 @@ export const createCategory = async (
     id: row.id,
     taxonomy_id: row.taxonomy_id,
     name: row.name,
-    parentId: row.parent_id,
+    parent_id: row.parent_id,
     level: row.level,
-    createdAt: row.created_at,
+    created_at: row.created_at,
   };
 };
