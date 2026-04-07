@@ -3,7 +3,6 @@ import FilePreviewModal from "@/components/add/FilePreviewModal";
 import ReceiptItemsSection from "@/components/add/ReceiptItemsSection";
 import { useCreateReceipt } from "@/hooks/receipt/createReceipt";
 import { useSettingsStore } from "@/stores/settingsStore";
-import { ReceiptItem } from "@/types/data";
 import { useTheme } from "@/utils/theme";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -21,7 +20,11 @@ import {
 import BasicInfoSection from "../../components/add/BasicInfoSection";
 import FileUploadSection from "../../components/add/FileUploadSection";
 import { useUser } from "../../hooks/useUser";
-import { CreateReceiptDTO, ReceiptFile } from "../../types/receipt";
+import {
+  CreateReceiptDTO,
+  ReceiptFile,
+  ReceiptItem,
+} from "../../types/receipt";
 
 export default function AddScreen() {
   const router = useRouter();

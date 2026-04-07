@@ -1,5 +1,5 @@
-// components/add/ItemCard.tsx
-import { Item } from "@/types/receipt";
+// components/add/ReceiptItemCard.tsx
+import { ReceiptItem } from "@/types/receipt";
 import { useTheme } from "@/utils/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useLayoutEffect, useState } from "react";
@@ -14,15 +14,15 @@ import ItemNameModal from "./ReceiptItemNameModal";
 import UnitModal from "./UnitModal";
 
 interface Props {
-  item: Item;
-  onUpdate: (updates: Partial<Item>) => void;
+  item: ReceiptItem;
+  onUpdate: (updates: Partial<ReceiptItem>) => void;
   onRemove: () => void;
   currency: string;
   isExpanded: boolean;
   onToggleExpand: () => void;
 }
 
-export default function ItemCard({
+export default function ReceiptItemCard({
   item,
   onUpdate,
   onRemove,

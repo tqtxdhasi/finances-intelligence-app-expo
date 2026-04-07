@@ -1,8 +1,8 @@
 import { BasicInfoSection } from "@/components/receipt/BasicInfoSection";
 import { DeleteButton } from "@/components/receipt/DeleteButton";
-import { ItemsSection } from "@/components/receipt/ItemsSection";
 import { ReceiptDetailHeader } from "@/components/receipt/ReceiptDetailHeader";
 import { ReceiptImage } from "@/components/receipt/ReceiptImage";
+import { ReceiptItemsSection } from "@/components/receipt/ReceiptItemsSection";
 import { useReceiptDetail } from "@/hooks/receipt/useReceiptDetail";
 import { useTheme } from "@/utils/theme";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -87,7 +87,7 @@ export default function ReceiptDetailScreen() {
           calculateTotal={calculateTotal}
         />
 
-        <ItemsSection
+        <ReceiptItemsSection
           items={editData.items}
           isEditing={isEditing}
           currency={editData.currency}

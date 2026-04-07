@@ -1,4 +1,4 @@
-// components/add/ItemCard.tsx
+// components/add/ReceiptItemCard.tsx
 import { Item } from "@/types/receipt";
 import { useTheme } from "@/utils/theme";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,7 +22,7 @@ interface Props {
   onToggleExpand: () => void;
 }
 
-export default function ItemCard({
+export default function ReceiptItemCard({
   item,
   onUpdate,
   onRemove,

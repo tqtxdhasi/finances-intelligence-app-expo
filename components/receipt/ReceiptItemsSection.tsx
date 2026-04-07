@@ -3,7 +3,7 @@ import { useTheme } from "@/utils/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import ItemCard from "./ItemCard";
+import ReceiptItemCard from "./ReceiptItemCard";
 
 interface Props {
   items: Item[];
@@ -13,7 +13,7 @@ interface Props {
   originalCurrency: string;
 }
 
-export const ItemsSection: React.FC<Props> = ({
+export const ReceiptItemsSection: React.FC<Props> = ({
   items,
   onAddItem,
   onUpdateItem,
@@ -57,7 +57,7 @@ export const ItemsSection: React.FC<Props> = ({
       </View>
 
       {items.map((item) => (
-        <ItemCard
+        <ReceiptItemCard
           key={item.id}
           item={item}
           onUpdate={(updates) => onUpdateItem(item.id, updates)}

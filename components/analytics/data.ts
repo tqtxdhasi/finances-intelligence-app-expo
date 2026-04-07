@@ -1,4 +1,4 @@
-import { ExpenseData, ProductDetail, TopExpense } from "../types";
+import { ExpenseData, ProductDetail, TopExpense } from "@/types/analytics";
 
 export const generateDummyData = (days: number): ExpenseData[] => {
   const data: ExpenseData[] = [];

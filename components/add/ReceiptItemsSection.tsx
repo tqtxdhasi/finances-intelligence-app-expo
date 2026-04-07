@@ -1,10 +1,10 @@
-// components/add/ItemsSection.tsx
+// components/add/ReceiptItemsSection.tsx
 import { ReceiptItem } from "@/types/receipt";
 import { useTheme } from "@/utils/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import ItemCard from "./ReceiptItemCard";
+import ReceiptItemCard from "./ReceiptItemCard";
 
 interface Props {
   receiptItems: ReceiptItem[];
@@ -58,7 +58,7 @@ export default function ReceiptItemsSection({
       </View>
 
       {receiptItems.map((receiptItem: ReceiptItem) => (
-        <ItemCard
+        <ReceiptItemCard
           key={receiptItem.id}
           item={receiptItem}
           onUpdate={(updates) => onUpdateReceiptItem(receiptItem.id, updates)}
