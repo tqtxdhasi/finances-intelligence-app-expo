@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { QueryParams } from "../../types/receipt";
-import { useReceiptsD1 } from "../useReceipts";
+import { useReceiptsD1 } from "./useReceipts";
 
 interface GroupedReceipt {
   date: string;

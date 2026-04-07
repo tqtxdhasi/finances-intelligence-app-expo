@@ -61,7 +61,6 @@ export default function AddScreen() {
     setOriginalCurrency(userCurrency || "USD");
   }, [userCurrency]);
 
-  // Item handlers
   const addNewReceiptItem = () => {
     const newReceiptItem: ReceiptItem = {
       id: Date.now().toString(),

@@ -65,6 +65,7 @@ export interface Product {
   id: string;
   name: string;
   category_id?: string | null;
+  default_unit: string | null;
   user_id?: string | null; // user who discovered it
   created_at: string;
   // Aggregated fields (computed)
@@ -73,7 +74,12 @@ export interface Product {
   totalSpent?: number;
   category?: string; // optional category name
 }
-
+export interface CreateProductDTO {
+  name: string; // required product name
+  categoryId?: string; // optional category ID
+  defaultUnit?: string; // optional default unit of measure
+  aliases?: string[]; // optional list of raw receipt names (for product_aliases)
+}
 export interface ProductAlias {
   id: string;
   product_id: string;

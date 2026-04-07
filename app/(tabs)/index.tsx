@@ -29,8 +29,6 @@ interface FilterState {
 export default function ReceiptsScreen() {
   const router = useRouter();
   const { colors, styles: themeStyles } = useTheme();
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-  const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [sortOption, setSortOption] = useState("date_desc");
   const [filters, setFilters] = useState<FilterState>({
@@ -78,16 +76,6 @@ export default function ReceiptsScreen() {
     updateFilters(apiParams);
   }, [apiParams, updateFilters]);
 
-  // Apply filters from modal
-  const handleApplyFilters = (
-    newFilters: FilterState,
-    newSortOption: string,
-  ) => {
-    setSortOption(newSortOption);
-    setFilters(newFilters);
-    setFilterModalVisible(false);
-  };
-
   // Clear all filters and search
   const handleClearFilters = () => {
     setSearchText("");
@@ -109,50 +97,14 @@ export default function ReceiptsScreen() {
     totalAmount: number;
   }
 
-  const renderItem = ({ item }: { item: GroupedReceipt }) => {
-    if (viewMode === "list") {
-      return (
-        <View>
-          <TimelineHeader date={item.date} totalAmount={item.totalAmount} />
-          {item.receipts.map((receipt) => (
-            <ReceiptItem key={receipt.id} item={receipt} viewMode={viewMode} />
-          ))}
-        </View>
-      );
-    } else {
-      // Grid view: flatten all receipts (no grouping)
-      return (
-        <>
-          {item.receipts.map((receipt) => (
-            <ReceiptItem key={receipt.id} item={receipt} viewMode={viewMode} />
-          ))}
-        </>
-      );
-    }
-  };
-
-  const flattenedForGrid = useMemo(() => {
-    if (viewMode === "grid") {
-      return groupedReceipts.flatMap((group) => group.receipts);
-    }
-    return groupedReceipts;
-  }, [viewMode, groupedReceipts]);
-
-  const renderFlatItem = ({ item }: { item: any }) => {
-    if (viewMode === "grid") {
-      return <ReceiptItem item={item} viewMode={viewMode} />;
-    } else {
-      return renderItem({ item });
-    }
-  };
-
-  const getKeyExtractor = (item: any) => {
-    if (viewMode === "grid") {
-      return item.id;
-    } else {
-      return item.date;
-    }
-  };
+  const renderGroupedReceipt = ({ item }: { item: GroupedReceipt }) => (
+    <View>
+      <TimelineHeader date={item.date} totalAmount={item.totalAmount} />
+      {item.receipts.map((receipt) => (
+        <ReceiptItem key={receipt.id} item={receipt} viewMode="list" />
+      ))}
+    </View>
+  );
 
   // Determine empty state message
   const renderEmptyState = () => {
@@ -215,11 +167,9 @@ export default function ReceiptsScreen() {
       />
 
       <FlatList
-        data={flattenedForGrid}
-        renderItem={renderFlatItem}
-        keyExtractor={getKeyExtractor}
-        key={viewMode}
-        numColumns={viewMode === "grid" ? 2 : 1}
+        data={groupedReceipts}
+        renderItem={renderGroupedReceipt}
+        keyExtractor={(item) => item.date}
         contentContainerStyle={styles.listContainer}
         onEndReached={loadMore}
         onEndReachedThreshold={0.2}

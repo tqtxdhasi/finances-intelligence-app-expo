@@ -1,16 +1,16 @@
 // hooks/useReceipts.ts
 import { useCallback, useEffect, useReducer, useRef } from "react";
 import { Alert } from "react-native";
+
 import {
   CreateReceiptDTO,
   QueryParams,
   Receipt,
   UpdateReceiptDTO,
-} from "../types/receipt";
-import { createReceipt as createReceiptService } from "./receipt/createReceipt";
-import { deleteReceiptById } from "./receipt/deleteReceiptById";
-import { getAllReceipts } from "./receipt/getAllReceipts";
-import { updateReceiptById } from "./receipt/updateReceiptById";
+} from "@/types/receipt";
+import { deleteReceiptById } from "./deleteReceiptById";
+import { getAllReceipts } from "./getAllReceipts";
+import { updateReceiptById } from "./updateReceiptById";
 
 // --- Types ---
 type State = {
@@ -167,11 +167,11 @@ export const useReceiptsD1 = (initialParams: QueryParams = {}) => {
     }
   }, [loading, hasMore, page, loadReceipts]);
 
-  const createReceipt = useCallback(
+  const createReceiptService = useCallback(
     async (data: CreateReceiptDTO) => {
       dispatch({ type: "SET_LOADING", payload: true });
       try {
-        const newReceipt = await createReceiptService(data);
+        const newReceipt = await createReceipt(data);
         await refresh();
         Alert.alert("Success", "Receipt created successfully");
         return newReceipt;
@@ -258,7 +258,7 @@ export const useReceiptsD1 = (initialParams: QueryParams = {}) => {
     hasMore,
     loadMore,
     refresh,
-    createReceipt,
+    createReceiptService,
     updateReceipt,
     deleteReceipt,
     updateFilters,

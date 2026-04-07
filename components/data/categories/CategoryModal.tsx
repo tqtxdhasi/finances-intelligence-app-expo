@@ -25,7 +25,7 @@ interface Category {
 interface CategoryModalProps {
   visible: boolean;
   selectedCategoryId: string | null;
-  onSelectCategory: (categoryId: string, categoryName: string) => void;
+  onSelectCategory: (categoryId: string, category: string) => void;
   onClose: () => void;
 }
 

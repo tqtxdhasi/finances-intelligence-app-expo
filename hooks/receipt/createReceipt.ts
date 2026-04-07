@@ -1,6 +1,5 @@
 // hooks/useCreateReceipt.ts
-import { Receipt } from "@/types/data";
-import { CreateReceiptDTO } from "@/types/receipt";
+import { CreateReceiptDTO, Receipt } from "@/types/receipt";
 import { useCallback, useState } from "react";
 import { Alert } from "react-native";
 import { generateId } from "../category/createCategory";

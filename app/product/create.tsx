@@ -1,5 +1,7 @@
+// app/(app)/product/create.tsx (or wherever your screen is located)
+import UnitModal from "@/components/add/UnitModal"; // reuse existing UnitModal
 import CategoryModal from "@/components/data/categories/CategoryModal";
-import { useCreateProduct } from "@/hooks/product/useProducts";
+import { useCreateProduct } from "@/hooks/product/createProduct";
 import { useTheme } from "@/utils/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -14,16 +16,18 @@ import {
   View,
 } from "react-native";
 
-export default function CreateItemScreen() {
+export default function CreateProductScreen() {
   const { colors, styles: themeStyles } = useTheme();
   const { mutate: createProduct, isPending: loading } = useCreateProduct();
 
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [categoryName, setCategoryName] = useState<string>("");
+  const [defaultUnit, setDefaultUnit] = useState<string>(""); // new state
   const [aliases, setAliases] = useState<string[]>([]);
   const [currentAlias, setCurrentAlias] = useState("");
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
+  const [unitModalVisible, setUnitModalVisible] = useState(false); // new modal
 
   const addAlias = () => {
     if (currentAlias.trim()) {
@@ -42,6 +46,10 @@ export default function CreateItemScreen() {
     setCategoryModalVisible(false);
   };
 
+  const handleSelectUnit = (unit: string) => {
+    setDefaultUnit(unit);
+  };
+
   const handleSave = async () => {
     if (!name.trim()) {
       Alert.alert("Error", "Product name is required");
@@ -52,6 +60,7 @@ export default function CreateItemScreen() {
       {
         name: name.trim(),
         categoryId: categoryId || undefined,
+        defaultUnit: defaultUnit || undefined, // include default unit
         aliases: aliases.length > 0 ? aliases : undefined,
       },
       {
@@ -81,6 +90,7 @@ export default function CreateItemScreen() {
       </View>
 
       <View style={styles.form}>
+        {/* Product Name */}
         <Text style={[styles.label, { color: colors.text }]}>
           Product Name *
         </Text>
@@ -95,6 +105,7 @@ export default function CreateItemScreen() {
           onChangeText={setName}
         />
 
+        {/* Category */}
         <Text style={[styles.label, { color: colors.text }]}>Category</Text>
         <TouchableOpacity
           style={[
@@ -112,6 +123,30 @@ export default function CreateItemScreen() {
           <Ionicons name="chevron-down" size={20} color={colors.textMuted} />
         </TouchableOpacity>
 
+        {/* Default Unit (NEW) */}
+        <Text style={[styles.label, { color: colors.text }]}>
+          Default Unit (Optional)
+        </Text>
+        <Text style={[styles.helperText, { color: colors.textSecondary }]}>
+          Common unit for this product (e.g., kg, liter, pack)
+        </Text>
+        <TouchableOpacity
+          style={[
+            styles.dropdownButton,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+            },
+          ]}
+          onPress={() => setUnitModalVisible(true)}
+        >
+          <Text style={[styles.dropdownButtonText, { color: colors.text }]}>
+            {defaultUnit || "Select a unit"}
+          </Text>
+          <Ionicons name="chevron-down" size={20} color={colors.textMuted} />
+        </TouchableOpacity>
+
+        {/* Aliases */}
         <Text style={[styles.label, { color: colors.text }]}>
           Receipt Name Aliases
         </Text>
@@ -173,16 +208,25 @@ export default function CreateItemScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Modals */}
       <CategoryModal
         visible={categoryModalVisible}
         selectedCategoryId={categoryId}
         onSelectCategory={handleSelectCategory}
         onClose={() => setCategoryModalVisible(false)}
       />
+
+      <UnitModal
+        visible={unitModalVisible}
+        selectedUnit={defaultUnit}
+        onSelect={handleSelectUnit}
+        onClose={() => setUnitModalVisible(false)}
+      />
     </ScrollView>
   );
 }
 
+// Styles remain exactly as you originally had them
 const styles = StyleSheet.create({
   container: {
     flex: 1,

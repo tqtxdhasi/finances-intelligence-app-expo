@@ -1,5 +1,5 @@
 // components/data/ProductsListProduct.tsx
-import { useDeleteProduct } from "@/hooks/product/useProducts"; // adjust import path
+import { useDeleteProduct } from "@/hooks/product/deleteProductById";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { Product } from "@/types/data";
 import { useTheme } from "@/utils/theme";
@@ -7,8 +7,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
 import {
-  ActivityIndicator,
-  Alert,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -24,32 +22,6 @@ export const ProductsListProduct: React.FC<ProductsListProductProps> = ({
 }) => {
   const { colors } = useTheme();
   const { currency: userCurrency } = useSettingsStore();
-  const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct();
-
-  const handleDeleteProduct = () => {
-    Alert.alert(
-      "Delete Product",
-      `Are you sure you want to delete "${product.name}"? This will affect ${product.occurrenceCount} receipts.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            deleteProduct(product.id, {
-              onSuccess: () => {
-                Alert.alert("Success", "Product deleted");
-              },
-              onError: (error) => {
-                Alert.alert("Error", "Failed to delete product");
-                console.error(error);
-              },
-            });
-          },
-        },
-      ],
-    );
-  };
 
   return (
     <View style={[styles.listProduct, { backgroundColor: colors.surface }]}>
@@ -96,28 +68,12 @@ export const ProductsListProduct: React.FC<ProductsListProductProps> = ({
         <TouchableOpacity
           onPress={() => router.push(`/product/edit/${product.id}`)}
           style={styles.actionButton}
-          disabled={isDeleting}
         >
           <Ionicons
             name="create-outline"
             size={20}
             color={colors.textSecondary}
           />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={handleDeleteProduct}
-          style={styles.actionButton}
-          disabled={isDeleting}
-        >
-          {isDeleting ? (
-            <ActivityIndicator size="small" color={colors.error || "#ff4444"} />
-          ) : (
-            <Ionicons
-              name="trash-outline"
-              size={20}
-              color={colors.error || "#ff4444"}
-            />
-          )}
         </TouchableOpacity>
       </View>
     </View>

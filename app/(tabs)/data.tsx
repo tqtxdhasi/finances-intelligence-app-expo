@@ -24,13 +24,24 @@ export default function DataManagementScreen() {
     }
   };
 
+  const getIconName = (tab: ActiveTab) => {
+    const isActive = activeTab === tab;
+    if (tab === "merchants") {
+      return isActive ? "storefront" : "storefront-outline";
+    } else if (tab === "categories") {
+      return isActive ? "folder-open" : "folder-outline";
+    } else {
+      return isActive ? "cube" : "cube-outline";
+    }
+  };
+
   return (
     <View style={[themeStyles.container, styles.container]}>
       <View style={styles.header}>
         <Text style={[themeStyles.title, styles.title]}>Data Management</Text>
-          <TouchableOpacity style={styles.createButton} onPress={handleAddNew}>
-            <Ionicons name="add-circle" size={28} color={colors.accent} />
-          </TouchableOpacity>
+        <TouchableOpacity style={styles.createButton} onPress={handleAddNew}>
+          <Ionicons name="add-circle" size={28} color={colors.accent} />
+        </TouchableOpacity>
       </View>
 
       <View style={[styles.tabs, { backgroundColor: colors.surface }]}>
@@ -47,13 +58,7 @@ export default function DataManagementScreen() {
             onPress={() => setActiveTab(tab)}
           >
             <Ionicons
-              name={
-                tab === "merchants"
-                  ? "storefront-outline"
-                  : tab === "categories"
-                    ? "folder-outline"
-                    : "pricetag-outline"
-              }
+              name={getIconName(tab)}
               size={20}
               color={activeTab === tab ? colors.accent : colors.textSecondary}
             />
