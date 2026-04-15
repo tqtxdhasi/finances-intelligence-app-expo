@@ -18,7 +18,7 @@ export default function DataManagementScreen() {
     if (activeTab === "merchants") {
       router.push("/merchant/create");
     } else if (activeTab === "categories") {
-      router.push("/categories/create");
+      router.push("/category/create");
     } else if (activeTab === "products") {
       router.push("/product/create");
     }

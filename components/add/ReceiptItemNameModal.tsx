@@ -1,7 +1,11 @@
 // components/add/ItemNameModal.tsx
+import { useGetAllProducts } from "@/hooks/product/getAllProducts";
+import { useTheme } from "@/utils/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Modal,
   Text,
@@ -9,8 +13,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { ITEMS } from "./items-data";
-import { useTheme } from "@/utils/theme";
 
 interface Props {
   visible: boolean;
@@ -18,6 +20,7 @@ interface Props {
   onSelect: (name: string) => void;
   onClose: () => void;
 }
+
 export default function ItemNameModal({
   visible,
   selectedName,
@@ -25,18 +28,22 @@ export default function ItemNameModal({
   onClose,
 }: Props) {
   const { colors } = useTheme();
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const [customName, setCustomName] = useState("");
 
-  const filteredItems = ITEMS.filter((item) =>
-    item.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  // Fetch all products from the database
+  const { data: products, isLoading, error } = useGetAllProducts();
 
-  const handleCustom = () => {
-    if (customName.trim()) {
-      onSelect(customName.trim());
-      onClose();
-    }
+  // Filter products based on search query (by product name)
+  const filteredProducts = products
+    ? products.filter((product) =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()),
+      )
+    : [];
+
+  const handleAddNewProduct = () => {
+    onClose(); // Close the modal
+    router.push("/(tabs)/data"); // Navigate to data tab to add a new product
   };
 
   return (
@@ -63,6 +70,7 @@ export default function ItemNameModal({
             maxHeight: "80%",
           }}
         >
+          {/* Header */}
           <View
             style={{
               flexDirection: "row",
@@ -81,6 +89,7 @@ export default function ItemNameModal({
             </TouchableOpacity>
           </View>
 
+          {/* Search Input */}
           <TextInput
             style={{
               backgroundColor: colors.surfaceLight,
@@ -91,40 +100,98 @@ export default function ItemNameModal({
               fontSize: 16,
               marginBottom: 16,
             }}
-            placeholder="Search item..."
+            placeholder="Search product..."
             placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
 
-          <FlatList
-            data={filteredItems}
-            keyExtractor={(item) => item}
-            renderItem={({ item }) => (
-              <TouchableOpacity
+          {/* Loading / Error / Product List */}
+          {isLoading ? (
+            <View style={{ padding: 20, alignItems: "center" }}>
+              <ActivityIndicator size="large" color={colors.accent} />
+              <Text style={{ color: colors.textSecondary, marginTop: 8 }}>
+                Loading products...
+              </Text>
+            </View>
+          ) : error ? (
+            <View style={{ padding: 20, alignItems: "center" }}>
+              <Ionicons
+                name="alert-circle-outline"
+                size={32}
+                color={colors.error}
+              />
+              <Text
                 style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  paddingVertical: 12,
-                  paddingHorizontal: 8,
-                  borderBottomWidth: 1,
-                  borderBottomColor: colors.border,
-                }}
-                onPress={() => {
-                  onSelect(item);
-                  onClose();
+                  color: colors.error,
+                  marginTop: 8,
+                  textAlign: "center",
                 }}
               >
-                <Text style={{ color: colors.text, fontSize: 16 }}>{item}</Text>
-                {selectedName === item && (
-                  <Ionicons name="checkmark" size={20} color={colors.accent} />
-                )}
-              </TouchableOpacity>
-            )}
-            style={{ maxHeight: 300 }}
-          />
+                Failed to load products. Please try again.
+              </Text>
+            </View>
+          ) : (
+            <FlatList
+              data={filteredProducts}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingVertical: 12,
+                    paddingHorizontal: 8,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.border,
+                  }}
+                  onPress={() => {
+                    onSelect(item.name);
+                    onClose();
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: colors.text, fontSize: 16 }}>
+                      {item.name}
+                    </Text>
+                    {item.category && (
+                      <Text
+                        style={{
+                          color: colors.textMuted,
+                          fontSize: 12,
+                          marginTop: 2,
+                        }}
+                      >
+                        {item.category}
+                      </Text>
+                    )}
+                  </View>
+                  {selectedName === item.name && (
+                    <Ionicons
+                      name="checkmark"
+                      size={20}
+                      color={colors.accent}
+                    />
+                  )}
+                </TouchableOpacity>
+              )}
+              ListEmptyComponent={
+                <Text
+                  style={{
+                    textAlign: "center",
+                    color: colors.textMuted,
+                    padding: 20,
+                  }}
+                >
+                  No products found.
+                </Text>
+              }
+              style={{ maxHeight: 300 }}
+            />
+          )}
 
+          {/* Button to add new product */}
           <View
             style={{
               marginTop: 16,
@@ -133,53 +200,33 @@ export default function ItemNameModal({
               paddingTop: 16,
             }}
           >
-            <Text
+            <TouchableOpacity
               style={{
-                color: colors.textSecondary,
-                fontSize: 14,
-                marginBottom: 8,
+                backgroundColor: colors.accent,
+                paddingVertical: 12,
+                borderRadius: 8,
+                alignItems: "center",
+                flexDirection: "row",
+                justifyContent: "center",
+                gap: 8,
               }}
+              onPress={handleAddNewProduct}
             >
-              Or enter custom name:
-            </Text>
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-            >
-              <TextInput
-                style={{
-                  flex: 1,
-                  backgroundColor: colors.surfaceLight,
-                  color: colors.text,
-                  borderRadius: 8,
-                  paddingHorizontal: 12,
-                  paddingVertical: 10,
-                  fontSize: 16,
-                }}
-                placeholder="Custom item name"
-                placeholderTextColor={colors.textMuted}
-                value={customName}
-                onChangeText={setCustomName}
+              <Ionicons
+                name="add-circle-outline"
+                size={20}
+                color={colors.text}
               />
-              <TouchableOpacity
+              <Text
                 style={{
-                  backgroundColor: colors.accent,
-                  paddingVertical: 10,
-                  paddingHorizontal: 16,
-                  borderRadius: 8,
+                  color: colors.text,
+                  fontSize: 16,
+                  fontWeight: "bold",
                 }}
-                onPress={handleCustom}
               >
-                <Text
-                  style={{
-                    color: colors.text,
-                    fontSize: 14,
-                    fontWeight: "bold",
-                  }}
-                >
-                  Add
-                </Text>
-              </TouchableOpacity>
-            </View>
+                Add New Product
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </View>

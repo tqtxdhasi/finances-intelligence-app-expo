@@ -1,5 +1,4 @@
 // components/add/ReceiptItemCard.tsx
-import { Item } from "@/types/receipt";
 import { useTheme } from "@/utils/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useLayoutEffect, useState } from "react";
@@ -12,10 +11,11 @@ import {
 } from "react-native";
 import ItemNameModal from "../add/ReceiptItemNameModal";
 import UnitModal from "../add/UnitModal";
+import { ReceiptItem } from "@/types/receipt";
 
 interface Props {
-  item: Item;
-  onUpdate: (updates: Partial<Item>) => void;
+  item: ReceiptItem;
+  onUpdate: (updates: Partial<ReceiptItem>) => void;
   onRemove: () => void;
   currency: string;
   isExpanded: boolean;
