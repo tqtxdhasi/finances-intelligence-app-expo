@@ -1,6 +1,7 @@
 // components/merchants/MerchantsTab.tsx (updated)
 import { useMerchants } from "@/hooks/merchant/getAllMerchantsWithStats";
 import { useTheme } from "@/utils/theme";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useCallback } from "react";
 import {
@@ -12,11 +13,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { EmptyState } from "../EmptyState";
+import { LoadingSkeleton } from "../LoadingSkeleton";
 import { StatsBar } from "../StatsBar";
 import { MerchantsListItem } from "./MerchantsListItem";
-import { LoadingSkeleton } from "../LoadingSkeleton";
-import { Ionicons } from "@expo/vector-icons";
-import { EmptyState } from "../EmptyState";
 
 export const MerchantsTab = () => {
   const { colors } = useTheme();
@@ -131,5 +131,5 @@ const styles = StyleSheet.create({
   errorText: { fontSize: 16, textAlign: "center", marginVertical: 16 },
   retryButton: { paddingHorizontal: 24, paddingVertical: 10, borderRadius: 8 },
   retryButtonText: { color: "#fff", fontWeight: "600" },
-  listContent: { paddingHorizontal: 16, paddingBottom: 20 },
+  listContent: { paddingBottom: 20 },
 });

@@ -3,9 +3,9 @@ import CategoryModal from "@/components/data/categories/CategoryModal";
 import { useDeleteProduct } from "@/hooks/product/deleteProductById";
 import { useProductById } from "@/hooks/product/getProductById";
 import {
-  UpdateProductData,
+  UpdateProductDTO,
   useUpdateProduct,
-} from "@/hooks/receipt/updateReceiptById";
+} from "@/hooks/product/updateProductById";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useTheme } from "@/utils/theme";
 import { Ionicons } from "@expo/vector-icons";
@@ -73,20 +73,20 @@ export default function EditProductScreen() {
       return;
     }
 
-    const updates: UpdateProductData = {
+    const updates: UpdateProductDTO = {
       name: name.trim(),
-      category_id: categoryId || null,
-      aliases: aliases, // full replacement
+      categoryId: categoryId || null,
+      aliases: aliases,
     };
 
     updateProduct(
-      { id, updates },
+      { id, data: updates },
       {
         onSuccess: () => {
           Alert.alert("Success", "Product updated successfully");
           router.back();
         },
-        onError: (err) => {
+        onError: (err: any) => {
           Alert.alert("Error", "Failed to update product");
           console.error(err);
         },

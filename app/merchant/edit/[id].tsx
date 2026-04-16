@@ -33,6 +33,11 @@ export default function EditMerchantScreen() {
     setLoading(true);
     try {
       const data = await getMerchantById(id);
+      if (!data) {
+        Alert.alert("Error", "Merchant not found");
+        router.back();
+        return;
+      }
       setMerchant(data);
       setEditingMerchant({
         name: data.name,

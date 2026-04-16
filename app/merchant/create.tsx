@@ -4,6 +4,7 @@ import IndustryTypeModal from "@/components/data/merchants/IndustryTypeModal";
 import CountryModal from "@/components/profile/CountryModal";
 import { createMerchant } from "@/hooks/merchant/createMerchant";
 import { useSettingsStore } from "@/stores/settingsStore";
+import { Location } from "@/types/data";
 import { ReceiptFile } from "@/types/receipt";
 import { useTheme } from "@/utils/theme";
 import { Ionicons } from "@expo/vector-icons";
@@ -157,22 +158,6 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-// Extended location type with all database fields
-interface Location {
-  id: string;
-  name?: string;
-  location_address?: string;
-  city?: string;
-  province?: string;
-  province_code?: string;
-  country?: string;
-  country_code?: string;
-  zip?: string;
-  latitude?: number;
-  longitude?: number;
-  displayName?: string;
-}
-
 export default function MerchantFormScreen() {
   const router = useRouter();
   const { colors, styles: themeStyles } = useTheme();
@@ -305,18 +290,17 @@ export default function MerchantFormScreen() {
   const parseNominatimResult = (item: any): Location => {
     const address = item.address || {};
     return {
-      id: item.place_id.toString(),
-      name: item.display_name.split(",")[0],
+      id: `temp_${Date.now()}_${Math.random()}`, // temporary ID for new locations
       location_address: item.display_name,
-      city: address.city || address.town || address.village || null,
+      city: address.city || address.town || address.village || "",
       province: address.state || null,
-      province_code: address.state_code || null,
-      country: address.country || null,
-      country_code: address.country_code?.toUpperCase() || null,
-      zip: address.postcode || null,
+      country_code: address.country_code?.toUpperCase() || "",
+      zip: address.postcode || "",
+      external_place_id: item.place_id?.toString() || null,
       latitude: parseFloat(item.lat),
       longitude: parseFloat(item.lon),
-      displayName: item.display_name,
+      created_at: new Date().toISOString(), // will be replaced on server
+      updated_at: new Date().toISOString(),
     };
   };
 
@@ -365,14 +349,12 @@ export default function MerchantFormScreen() {
         country_code: countryCode.trim() || null,
         tax_registration_id: taxRegistrationId.trim() || null,
         locations: locations.map((loc) => ({
-          name: loc.name || null,
-          location_address: loc.location_address || null,
-          city: loc.city || null,
+          location_address: loc.location_address || "",
+          city: loc.city || "",
           province: loc.province || null,
-          province_code: loc.province_code || null,
-          country: loc.country || null,
-          country_code: loc.country_code || null,
-          zip: loc.zip || null,
+          country_code: loc.country_code || "",
+          zip: loc.zip || "",
+          external_place_id: loc.id, // Use OSM place_id as external_place_id
           latitude: loc.latitude || null,
           longitude: loc.longitude || null,
         })),

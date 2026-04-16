@@ -98,7 +98,7 @@ const ReceiptItem: React.FC<ReceiptItemProps> = ({
           viewMode === "list"
             ? styles.thumbnailPlaceholder
             : styles.gridThumbnailPlaceholder,
-          { backgroundColor: colors.surfaceVariant || colors.surface },
+          { backgroundColor: colors.surface },
         ]}
       >
         <Ionicons
@@ -145,7 +145,7 @@ const ReceiptItem: React.FC<ReceiptItemProps> = ({
         {formatDateTime(item.date)}
       </Text>
       <Text style={[styles.gridTotal, { color: colors.accent }]}>
-        {item.total.toFixed(2)} {currency}
+        {item.total_amount.toFixed(2)} {currency}
       </Text>
     </TouchableOpacity>
   );

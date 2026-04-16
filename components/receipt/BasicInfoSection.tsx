@@ -151,7 +151,7 @@ export const BasicInfoSection: React.FC<Props> = ({
             Total
           </Text>
           <Text style={[styles.total, { color: colors.accent }]}>
-            {isEditing ? calculateTotal() : receipt.total.toFixed(2)}
+            {isEditing ? calculateTotal() : receipt.total_amount.toFixed(2)}
           </Text>
         </View>
       </View>
