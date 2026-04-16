@@ -1,5 +1,5 @@
 // components/add/ReceiptItemsSection.tsx
-import { ReceiptItem } from "@/types/receipt";
+import { FormReceiptItem } from "@/app/(tabs)/add";
 import { useTheme } from "@/utils/theme";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
@@ -7,9 +7,9 @@ import { Text, TouchableOpacity, View } from "react-native";
 import ReceiptItemCard from "./ReceiptItemCard";
 
 interface Props {
-  receiptItems: ReceiptItem[];
+  receiptItems: FormReceiptItem[];
   onAddReceiptItem: () => void;
-  onUpdateReceiptItem: (id: string, updates: Partial<ReceiptItem>) => void;
+  onUpdateReceiptItem: (id: string, updates: Partial<FormReceiptItem>) => void;
   onRemoveReceiptItem: (id: string) => void;
   originalCurrency: string;
 }
@@ -57,7 +57,7 @@ export default function ReceiptItemsSection({
         </TouchableOpacity>
       </View>
 
-      {receiptItems.map((receiptItem: ReceiptItem) => (
+      {receiptItems.map((receiptItem: FormReceiptItem) => (
         <ReceiptItemCard
           key={receiptItem.id}
           item={receiptItem}

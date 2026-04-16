@@ -5,6 +5,27 @@ import { Alert } from "react-native";
 import { generateId } from "../category/createCategory";
 import { executeQuery } from "../executeQuery";
 
+// Helper to ensure a default "Uncategorized" category exists
+const getOrCreateDefaultCategory = async (): Promise<string> => {
+  const defaultCategoryName = "Uncategorized";
+  const findQuery = "SELECT id FROM categories WHERE name = ? LIMIT 1";
+  const result = await executeQuery(findQuery, [defaultCategoryName]);
+
+  if (result && Array.isArray(result) && result.length > 0) {
+    return result[0].id;
+  }
+
+  // Create the default category
+  const categoryId = generateId();
+  const now = new Date().toISOString();
+  const insertQuery = `
+    INSERT INTO categories (id, name, level, created_at)
+    VALUES (?, ?, ?, ?)
+  `;
+  await executeQuery(insertQuery, [categoryId, defaultCategoryName, 0, now]);
+  return categoryId;
+};
+
 // Debug helper to check foreign keys
 const validateForeignKeys = async (data: CreateReceiptDTO) => {
   console.log("🔍 Validating foreign keys:", {
@@ -163,21 +184,22 @@ const createReceiptService = async (
   if (data.items.length > 0) {
     const itemValues: any[] = [];
     const placeholders: string[] = [];
+    const defaultCategoryId = await getOrCreateDefaultCategory();
 
     for (const item of data.items) {
       const itemId = generateId();
       itemValues.push(
         itemId,
         receiptId,
-        null, // product_id
-        null, // category_id
+        null,
+        defaultCategoryId,
         item.rawName,
         item.quantity,
         item.unitPrice,
         item.totalPrice,
         item.unitOfMeasure || null,
-        null, // normalized_quantity
-        null, // normalized_unit
+        null,
+        null,
         item.discountAmount ?? 0,
       );
       placeholders.push("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");

@@ -20,12 +20,15 @@ import {
 import BasicInfoSection from "../../components/add/BasicInfoSection";
 import FileUploadSection from "../../components/add/FileUploadSection";
 import { useUser } from "../../hooks/useUser";
-import {
-  CreateReceiptDTO,
-  ReceiptFile,
-  ReceiptItem,
-} from "../../types/receipt";
-
+import { CreateReceiptDTO, ReceiptFile } from "../../types/receipt";
+export interface FormReceiptItem {
+  id: string;
+  name: string;
+  quantity: string;
+  unit: string;
+  price: string;
+  code?: string;
+}
 export default function AddScreen() {
   const router = useRouter();
   const { createReceipt, loading: saving } = useCreateReceipt();
@@ -48,11 +51,11 @@ export default function AddScreen() {
     userCurrency || "USD",
   );
   const [file, setFile] = useState<ReceiptFile | null>(null);
-  const [receiptItems, setReceiptItems] = useState<ReceiptItem[]>([
+  const [receiptItems, setReceiptItems] = useState<FormReceiptItem[]>([
     {
       id: Date.now().toString(),
       name: "",
-      quantity: 1,
+      quantity: "1",
       unit: "pcs",
       price: "",
     },
@@ -65,10 +68,10 @@ export default function AddScreen() {
   }, [userCurrency]);
 
   const addNewReceiptItem = () => {
-    const newReceiptItem: ReceiptItem = {
+    const newReceiptItem: FormReceiptItem = {
       id: Date.now().toString(),
       name: "",
-      quantity: 1,
+      quantity: "1",
       unit: "pcs",
       price: "",
     };
@@ -85,7 +88,7 @@ export default function AddScreen() {
     );
   };
 
-  const updateReceiptItem = (id: string, updates: Partial<ReceiptItem>) => {
+  const updateReceiptItem = (id: string, updates: Partial<FormReceiptItem>) => {
     setReceiptItems(
       receiptItems.map((receiptItem) =>
         receiptItem.id === id ? { ...receiptItem, ...updates } : receiptItem,
@@ -95,9 +98,9 @@ export default function AddScreen() {
 
   // Total calculation
   const calculateTotal = () => {
-    const sum = receiptItems.reduce((acc, receiptItem) => {
-      const price = parseFloat(receiptItem.price) || 0;
-      const quantity = parseFloat(receiptItem.quantity) || 0;
+    const sum = receiptItems.reduce((acc, item) => {
+      const price = parseFloat(item.price) || 0;
+      const quantity = parseFloat(item.quantity) || 0;
       return acc + price * quantity;
     }, 0);
     return sum.toFixed(2);
@@ -165,27 +168,26 @@ export default function AddScreen() {
       const tax = 0;
       const total = subtotal + tax;
 
-      const receiptItems = receiptItems.map((receiptItem) => ({
-        rawName: receiptItem.name,
-        quantity: parseFloat(receiptItem.quantity),
-        unitPrice: parseFloat(receiptItem.price),
-        totalPrice:
-          parseFloat(receiptItem.price) * parseFloat(receiptItem.quantity),
+      const mappedItems = receiptItems.map((item) => ({
+        rawName: item.name,
+        quantity: parseFloat(item.quantity),
+        unitPrice: parseFloat(item.price),
+        totalPrice: parseFloat(item.price) * parseFloat(item.quantity),
         discountAmount: 0,
-        unitOfMeasure: receiptItem.unit,
+        unitOfMeasure: item.unit,
       }));
 
       const receiptData: CreateReceiptDTO = {
         userId,
         merchantId: selectedMerchantId!,
-        locationId: selectedLocationId || undefined, // Note: use undefined, not null
+        locationId: selectedLocationId || undefined,
         date: dateTimeStr,
         subtotalAmount: subtotal,
         taxAmount: tax,
         totalAmount: total,
         currency: originalCurrency,
         paymentType: undefined,
-        items: receiptItems,
+        items: mappedItems,
         imagePath: file?.uri,
       };
 
@@ -204,7 +206,7 @@ export default function AddScreen() {
         {
           id: Date.now().toString(),
           name: "",
-          quantity: 1,
+          quantity: "1",
           unit: "pcs",
           price: "",
         },
