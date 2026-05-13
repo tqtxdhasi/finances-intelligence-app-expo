@@ -1,5 +1,5 @@
 // components/add/ItemModal.tsx
-import { Item } from "@/types/receipt";
+import { ReceiptItem } from "@/types/receipt";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
@@ -14,10 +14,10 @@ import {
 
 interface Props {
   visible: boolean;
-  item: Item | null;
+  item: ReceiptItem | null;
   onSave: () => void;
   onClose: () => void;
-  onChange: (item: Item) => void;
+  onChange: (item: ReceiptItem) => void;
 }
 
 const UNITS = ["pcs", "kg", "g", "l", "ml", "pack", "box", "dozen", "bottle"];
