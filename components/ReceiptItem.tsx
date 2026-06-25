@@ -1,5 +1,5 @@
 import { useTheme } from "@/utils/theme";
-import { Ionicons } from "@expo/vector-icons"; // Make sure to install expo/vector-icons if not already
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import {

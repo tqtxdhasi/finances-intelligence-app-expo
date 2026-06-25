@@ -2,13 +2,16 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+export type UsagePurpose = "personal" | "business" | "both" | "other";
+
 // Define settings interface
 interface Settings {
   currency: string;
   country: string;
   theme: "light" | "dark";
   accentColor: string;
-  currencyManuallySet: boolean; // ✅ added
+  currencyManuallySet: boolean;
+  usagePurpose: UsagePurpose; // new field
 }
 
 interface SettingsStore extends Settings {
@@ -22,8 +25,10 @@ const defaultSettings: Settings = {
   country: "PL",
   theme: "dark",
   accentColor: "#ff9800",
-  currencyManuallySet: false, // ✅ added
+  currencyManuallySet: false,
+  usagePurpose: "personal", // default to personal
 };
+
 // Create the store with persistence
 export const useSettingsStore = create<SettingsStore>()(
   persist(

@@ -5,7 +5,7 @@ import ThemeSelector from "@/components/profile/ThemeSelector";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { getCurrencyForCountry } from "@/utils/getCurrencyForCountry";
 import { useTheme } from "@/utils/theme";
-import { useRouter } from "expo-router"; // ✅ add this
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   ScrollView,
@@ -15,15 +15,27 @@ import {
   View,
 } from "react-native";
 
+type UsagePurpose = "personal" | "business" | "both" | "other";
+
 interface Props {
   onComplete: () => void;
 }
 
 export default function OnboardingScreen({ onComplete = () => {} }: Props) {
-  const router = useRouter(); // ✅ navigation
-  const { update, currency, country, theme, accentColor } = useSettingsStore();
+  const router = useRouter();
+  const {
+    update,
+    currency,
+    country,
+    theme,
+    accentColor,
+    usagePurpose, // new field
+  } = useSettingsStore();
   const { colors, styles: themeStyles } = useTheme();
   const [step, setStep] = useState(0);
+  const [selectedPurpose, setSelectedPurpose] = useState<UsagePurpose>(
+    usagePurpose || "personal",
+  );
 
   const handleCountryChange = (newCountry: string) => {
     const suggested = getCurrencyForCountry(newCountry);
@@ -44,14 +56,14 @@ export default function OnboardingScreen({ onComplete = () => {} }: Props) {
     update({ accentColor: newColor });
 
   const nextStep = async () => {
-    // ✅ make async
-    if (step < 2) {
+    if (step < 3) {
+      // step 3 is final, so we go up to 3
       setStep(step + 1);
     } else {
-      // Mark first launch as done
+      // Save purpose before completing
+      update({ usagePurpose: selectedPurpose });
       await onComplete();
-      // Navigate to the main app (tabs)
-      router.replace("/"); // or "/(tabs)" if your tabs are inside a group
+      router.replace("/");
     }
   };
 
@@ -108,12 +120,74 @@ export default function OnboardingScreen({ onComplete = () => {} }: Props) {
             </View>
           </>
         );
-      case 2:
+      case 2: {
+        const purposes: { value: UsagePurpose; label: string }[] = [
+          { value: "personal", label: "Personal Expenses" },
+          { value: "business", label: "Business Expenses" },
+          { value: "both", label: "Both Personal & Business" },
+          { value: "other", label: "Other" },
+        ];
+        return (
+          <>
+            <Text style={[themeStyles.title, styles.title]}>
+              How will you use the app?
+            </Text>
+            <Text style={[styles.description, { color: colors.textSecondary }]}>
+              This helps us tailor the experience for you.
+            </Text>
+            <View style={styles.purposeContainer}>
+              {purposes.map((p) => (
+                <TouchableOpacity
+                  key={p.value}
+                  style={[
+                    styles.purposeOption,
+                    {
+                      backgroundColor:
+                        selectedPurpose === p.value
+                          ? colors.accent + "20" // 20% opacity
+                          : colors.surface,
+                      borderColor:
+                        selectedPurpose === p.value
+                          ? colors.accent
+                          : colors.border,
+                    },
+                  ]}
+                  onPress={() => setSelectedPurpose(p.value)}
+                >
+                  <Text
+                    style={[
+                      styles.purposeText,
+                      {
+                        color:
+                          selectedPurpose === p.value
+                            ? colors.accent
+                            : colors.text,
+                        fontWeight: selectedPurpose === p.value ? "600" : "400",
+                      },
+                    ]}
+                  >
+                    {p.label}
+                  </Text>
+                  {selectedPurpose === p.value && (
+                    <View
+                      style={[
+                        styles.checkmark,
+                        { backgroundColor: colors.accent },
+                      ]}
+                    />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        );
+      }
+      case 3:
         return (
           <>
             <Text style={[themeStyles.title, styles.title]}>Ready!</Text>
             <Text style={[styles.description, { color: colors.textSecondary }]}>
-              You're all set. Start tracking your receipts.
+              You're all set. Start tracking your transactions.
             </Text>
           </>
         );
@@ -147,7 +221,7 @@ export default function OnboardingScreen({ onComplete = () => {} }: Props) {
             onPress={nextStep}
           >
             <Text style={[styles.buttonText, { color: "#fff" }]}>
-              {step === 2 ? "Get Started" : "Next"}
+              {step === 3 ? "Get Started" : "Next"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -181,4 +255,25 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
   },
   buttonText: { fontSize: 16, fontWeight: "600" },
+  purposeContainer: {
+    marginTop: 8,
+  },
+  purposeOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    marginBottom: 12,
+  },
+  purposeText: {
+    fontSize: 16,
+  },
+  checkmark: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+  },
 });
