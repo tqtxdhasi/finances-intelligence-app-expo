@@ -65,7 +65,6 @@ CREATE TABLE IF NOT EXISTS categories (
   FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL
 );
 
--- Constrain merchants to specific category branches (e.g., Decathlon -> Sports)
 CREATE TABLE IF NOT EXISTS merchant_category_constraints (
   merchant_id TEXT NOT NULL,
   root_category_id TEXT NOT NULL,
@@ -83,7 +82,6 @@ CREATE TABLE IF NOT EXISTS products (
   FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
 );
 
--- Entity Resolution: Learns how messy receipt strings map to clean products
 CREATE TABLE IF NOT EXISTS product_aliases (
   id TEXT PRIMARY KEY,
   product_id TEXT NOT NULL,
@@ -97,20 +95,14 @@ CREATE TABLE IF NOT EXISTS product_aliases (
 -- =====================================================
 CREATE TABLE IF NOT EXISTS receipts (
   id TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL,
   merchant_id TEXT NOT NULL,
   location_id TEXT,
-  date DATETIME NOT NULL,
   subtotal_amount REAL,
-  total_amount REAL NOT NULL,
   tax_amount REAL DEFAULT 0,
   items_count INTEGER,
-  currency TEXT DEFAULT 'USD',
-  payment_type TEXT,
   image_path TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (merchant_id) REFERENCES merchants(id) ON DELETE CASCADE,
   FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE SET NULL
 );
@@ -137,11 +129,51 @@ CREATE TABLE IF NOT EXISTS receipt_items (
 );
 
 -- =====================================================
--- 5. ANALYTICS & SEARCH INDEXES
+-- 5. PERSONAL FINANCE LAYER
 -- =====================================================
-CREATE INDEX IF NOT EXISTS idx_receipt_date ON receipts(date);
+CREATE TABLE IF NOT EXISTS transactions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('expense', 'income', 'transfer')),
+  date DATETIME NOT NULL,
+  amount REAL NOT NULL,
+  currency TEXT DEFAULT 'USD',
+  payment_type TEXT,
+  category_id TEXT,                   
+  receipt_id TEXT UNIQUE,            
+  notes TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,  
+  
+  -- Guardrail: Ensure income/transfers don't accidentally hold receipts
+  CHECK (receipt_id IS NULL OR (receipt_id IS NOT NULL AND type = 'expense')),
+  
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
+  FOREIGN KEY (receipt_id) REFERENCES receipts(id) ON DELETE SET NULL
+);
+
+-- =====================================================
+-- 6. VIEWS, INDEXES & ANALYTICS
+-- =====================================================
+CREATE VIEW IF NOT EXISTS view_legacy_receipts AS
+SELECT 
+    r.id,
+    t.user_id,
+    r.merchant_id,
+    r.location_id,
+    t.date,
+    r.subtotal_amount,
+    t.amount AS total_amount,
+    r.tax_amount,
+    r.items_count,
+    t.currency,
+    r.image_path
+FROM receipts r
+INNER JOIN transactions t ON t.receipt_id = r.id;
+
 CREATE INDEX IF NOT EXISTS idx_item_product ON receipt_items(product_id);
 CREATE INDEX IF NOT EXISTS idx_alias_lookup ON product_aliases(raw_receipt_name);
 CREATE INDEX IF NOT EXISTS idx_category_hierarchy ON categories(parent_id);
-CREATE INDEX IF NOT EXISTS idx_user_merchant_loyalty ON user_merchants(user_id, visit_count DESC);
 CREATE INDEX IF NOT EXISTS idx_merchant_constraints ON merchant_category_constraints(merchant_id);
+CREATE INDEX IF NOT EXISTS idx_transaction_timeline ON transactions(user_id, date DESC);
